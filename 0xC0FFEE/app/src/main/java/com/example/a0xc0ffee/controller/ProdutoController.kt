@@ -5,7 +5,7 @@ import com.example.a0xc0ffee.model.Produto
 import com.example.a0xc0ffee.model.type.PontoDaTorra
 import com.example.a0xc0ffee.model.type.TipoDoGrao
 
-class ProdutoController(val mediaController: NavHostController) {
+class ProdutoController: BaseController("Produto") {
     fun cadastrar(produto: Produto): Boolean {
         return false
     }

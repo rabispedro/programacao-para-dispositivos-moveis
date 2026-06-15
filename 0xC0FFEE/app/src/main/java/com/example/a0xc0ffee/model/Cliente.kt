@@ -6,10 +6,23 @@ import com.example.a0xc0ffee.model.vo.Instagram
 import com.example.a0xc0ffee.model.vo.Nome
 import com.example.a0xc0ffee.model.vo.Telefone
 
+import kotlin.collections.Map
+
 data class Cliente(
     val cpf: CPF,
     val nome: Nome,
     val telefone: Telefone,
     val endereco: Endereco,
     val instagram: Instagram
-) {}
+) {
+    constructor(cpf: String, nome: String, telefone: String, endereco: String, instagram: String) :
+        this(CPF(cpf), Nome(nome), Telefone(telefone), Endereco(endereco), Instagram(instagram))
+
+    constructor(obj: Map<String, Any>) : this(
+        obj.get("cpf") as String,
+        obj.get("nome") as String,
+        obj.get("telefone") as String,
+        obj.get("endereco") as String,
+        obj.get("instagram") as String
+    )
+}

@@ -3,9 +3,8 @@ package com.example.a0xc0ffee.controller
 import androidx.navigation.NavHostController
 import com.example.a0xc0ffee.model.Cliente
 import com.example.a0xc0ffee.model.Pedido
-import com.example.a0xc0ffee.ui.theme.icon.ReceiptIcon
 
-class PedidoController(val mediaController: NavHostController) {
+class PedidoController: BaseController("Pedido") {
     fun cadastrar(cpfCliente: String): Boolean {
         return false
     }

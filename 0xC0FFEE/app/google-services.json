@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "347125584165",
+    "project_id": "xc0ffee-14df4",
+    "storage_bucket": "xc0ffee-14df4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:347125584165:android:9449d518e230cc00244acc",
+        "android_client_info": {
+          "package_name": "com.example.a0xc0ffee"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfHtZxEukQuZJVEGIwnfTvb_ux24DZxXo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
