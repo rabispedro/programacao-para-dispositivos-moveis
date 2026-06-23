@@ -2,21 +2,32 @@ package com.example.a0xc0ffee.controller
 
 import android.util.Log
 import com.example.a0xc0ffee.model.Cliente
+import com.example.a0xc0ffee.model.mapper.Mapper
+import kotlinx.coroutines.tasks.await
+import kotlin.collections.forEach
 
-class ClienteController: BaseController("Cliente") {
-    fun cadastrar(cliente: Cliente): Boolean {
+class ClienteController(override val mapper: Mapper<Cliente>) : BaseController<Cliente>("Cliente") {
+    suspend fun cadastrar(cliente: Cliente): Boolean {
         var result = false
+
         repository
-                .collection(collection)
-                .add(cliente)
-                .addOnSuccessListener {
-                    result = true
-                }
+            .collection(collection)
+            .document(cliente.cpf.value)
+            .set(mapper.toMap(cliente))
+            .addOnSuccessListener {
+                Log.d("debug", "Cliente inserido com sucesso")
+                result = true
+            }
+            .addOnFailureListener {
+                Log.d("debug", "Falha: $it")
+                result = false
+            }
+            .await()
 
         return result
     }
 
-    fun listar(): List<Cliente> {
+    suspend fun listar(): List<Cliente> {
         val result: MutableList<Cliente> = mutableListOf()
 
         repository
@@ -24,47 +35,95 @@ class ClienteController: BaseController("Cliente") {
             .get()
             .addOnSuccessListener { row ->
                 for (obj in row) {
-                    Log.d("debug", "Object: ${obj.data}")
-//                    val objeto = cliente.toObject(Cliente::class.java)
-                    val cliente = Cliente(obj.data)
-                    Log.d("debug", "Document: $cliente")
-                    result.add(cliente)
+                    val entity = mapper.fromMap(obj.data)
+                    result.add(entity)
                 }
+            }
+            .addOnFailureListener {
+                Log.d("debug", "Falha: $it")
+            }
+            .await()
+
+        return result
+    }
+
+    suspend fun listar(texto: String): List<Cliente> {
+        val result: MutableList<Cliente> = mutableListOf()
+
+        repository
+            .collection(collection)
+            .whereEqualTo("cpf", texto)
+            .whereEqualTo("nome", texto)
+            .whereEqualTo("telefone", texto)
+            .whereEqualTo("endereco", texto)
+            .get()
+            .addOnSuccessListener { row ->
+                for (obj in row) {
+                    result.add(mapper.fromMap(obj.data))
+                }
+            }
+            .await()
+
+        Log.d("debug", "Result:")
+        result.forEach { Log.d("debug", "$it") }
+
+        return result
+    }
+
+    suspend fun buscar(cpf: String): Cliente {
+        var result: Cliente = Cliente("11111111111", "Tese", "1193333333", "endereco", "instagram.com/teste")
+
+        repository
+            .collection(collection)
+            .whereEqualTo("cpf", cpf)
+            .get()
+            .addOnSuccessListener { row ->
+                for (obj in row) {
+                    result = mapper.fromMap(obj.data)
+                }
+            }
+            .addOnFailureListener {
+                Log.d("debug", "Falha: $it")
             }
 
         return result
     }
 
-    fun buscar(cpf: String): Cliente {
-//        val cliente = repository.find { it.cpf.equals(cpf) }
-//
-//        if cliente != null {
-//            return cliente
-//        }
+    suspend fun deletar(cpf: String): Boolean {
+        var result = false
 
-        throw Exception("Cliente não encontrado")
+        repository
+            .collection(collection)
+            .document(cpf)
+            .delete()
+            .addOnSuccessListener {
+                Log.d("debug", "Cliente inserido com sucesso")
+                result = true
+            }
+            .addOnFailureListener {
+                Log.d("debug", "Falha: $it")
+            }
+            .await()
+
+        return result
     }
 
-    fun deletar(cpf: String): Boolean {
-//        val cliente = repository.find { it.cpf.equals(cpf) }
-//
-//        if cliente != null {
-//            return false
-//        }
-//
-//        repository.remove(cliente)
-        return true
-    }
+    suspend fun alterar(cliente: Cliente): Boolean {
+        var result = false
 
-    fun alterar(cliente: Cliente): Boolean {
-//        var clienteEncontrado = repository.find { it.cpf.equals(cliente.cpf) }
-//
-//        if clienteEncontrado != null {
-//            return false
-//        }
-//
-//        clienteEncontrado = cliente
+        repository
+            .collection(collection)
+            .document(cliente.cpf.value)
+            .update(mapper.toMap(cliente))
+            .addOnSuccessListener {
+                Log.d("debug", "Cliente alterado com sucesso")
+                result = true
+            }
+            .addOnFailureListener {
+                Log.d("debug", "Falha: $it")
+            }
+            .await()
 
-        return true
+        return result
     }
 }

@@ -1,5 +1,7 @@
 package com.example.a0xc0ffee.model.type
 
+import java.util.Locale
+
 // NOTE: fonte https://www.pressca.com.br/blog/entenda-a-importancia-da-afericao-precisa-do-ponto-de-cor-de-torra-do-cafe/
 enum class PontoDaTorra {
     MUITO_CLARA,
@@ -9,5 +11,9 @@ enum class PontoDaTorra {
     MEDIA,
     MEDIA_ESCURA,
     ESCURA,
-    QUEIMADA
+    QUEIMADA;
+
+    fun localize(): String {
+        return this.name.lowercase().replace("_", " ").capitalize(Locale.ROOT)
+    }
 }

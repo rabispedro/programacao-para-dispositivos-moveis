@@ -9,4 +9,7 @@ data class Produto(
     val pontoDaTorra: PontoDaTorra,
     val valor: Double,
     val blend: Boolean
-) {}
+) {
+    constructor(id: String, tipoDoGrao: String, pontoDaTorra: String, valor: String, blend: String) :
+            this(id, TipoDoGrao.valueOf(tipoDoGrao), PontoDaTorra.valueOf(pontoDaTorra), valor.toDouble(), blend.toBoolean())
+}

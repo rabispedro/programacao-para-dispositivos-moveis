@@ -8,6 +8,6 @@ data class Nome(val value: String): ValueObject {
     }
 
     override fun isValid(): Boolean {
-        return Regex("""[a-zA-Z]{2,100}""").matches(value)
+        return Regex("""[a-zA-Z\s]{2,100}""").matches(value)
     }
 }

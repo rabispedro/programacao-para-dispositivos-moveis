@@ -1,9 +1,10 @@
 package com.example.a0xc0ffee.view
 
-import android.annotation.SuppressLint
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.CoroutineScope
 
 interface View {
     val displayName: String
@@ -11,5 +12,5 @@ interface View {
     val tintColor: Color
 
     @Composable
-    fun View()
+    fun View(scope: CoroutineScope, snackbar: SnackbarHostState)
 }

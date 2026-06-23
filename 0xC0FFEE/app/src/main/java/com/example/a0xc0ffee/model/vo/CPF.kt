@@ -10,4 +10,8 @@ data class CPF(val value: String): ValueObject {
     override fun isValid(): Boolean {
         return Regex("""(\d{11})|(\d{3}\.\d{3}\.\d{3}-\d{2})""").matches(value)
     }
+
+    fun safeShow(): String {
+        return value.substring(0, 3) + ".XXX.XXX-" + value.substring(9)
+    }
 }

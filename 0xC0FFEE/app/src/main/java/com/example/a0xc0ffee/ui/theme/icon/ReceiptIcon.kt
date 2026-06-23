@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 @Suppress("CheckReturnValue")
-public val ReceiptIcon: ImageVector
+val ReceiptIcon: ImageVector
   get() {
     if (_receipt_long != null) {
       return _receipt_long!!
