@@ -5,6 +5,8 @@ import com.example.a0xc0ffee.model.Cliente
 import com.example.a0xc0ffee.model.Produto
 import com.example.a0xc0ffee.model.mapper.ClienteMapper
 import com.example.a0xc0ffee.model.mapper.Mapper
+import com.google.firebase.firestore.Filter
+import com.google.firestore.v1.StructuredQuery
 import kotlinx.coroutines.tasks.await
 
 class ProdutoController(override val mapper: Mapper<Produto>) : BaseController<Produto>("Produto") {
@@ -48,24 +50,19 @@ class ProdutoController(override val mapper: Mapper<Produto>) : BaseController<P
         return result
     }
 
-    suspend fun listar(nome: String): List<Produto> {
+    suspend fun listar(texto: String): List<Produto> {
         val result: MutableList<Produto> = mutableListOf()
 
         repository
             .collection(collection)
-            .whereEqualTo("id", nome)
-            .whereEqualTo("tipoDoGrao", nome)
-            .whereEqualTo("pontoDaTorra", nome)
+//            .whereEqualTo("id", texto)
             .get()
             .addOnSuccessListener { row ->
-                for (obj in row) {
-                    result.add(mapper.fromMap(obj.data))
-                }
+                row
+                    .filter { (it.data["id"] as String).contains(texto) }
+                    .forEach { result.add(mapper.fromMap(it.data)) }
             }
             .await()
-
-        Log.d("debug", "Result:")
-        result.forEach { Log.d("debug", "$it") }
 
         return result
     }
@@ -78,10 +75,7 @@ class ProdutoController(override val mapper: Mapper<Produto>) : BaseController<P
             .get()
             .addOnSuccessListener { row ->
                 for (obj in row) {
-                    Log.d("debug", "Object: ${obj.data}")
-//                    val objeto = cliente.toObject(Cliente::class.java)
                     val cliente = ClienteMapper.fromMap(obj.data)
-                    Log.d("debug", "Document: $cliente")
                     result.add(cliente)
                 }
             }
@@ -89,26 +83,6 @@ class ProdutoController(override val mapper: Mapper<Produto>) : BaseController<P
 
         Log.d("debug", "Result:")
         result.forEach { Log.d("debug", "$it") }
-
-        return result
-    }
-
-    suspend fun buscar(id: String): Produto {
-        var result: Produto = Produto("", "ACAIA", "QUEIMADA", "0.0", "false")
-
-        repository
-            .collection(collection)
-            .whereEqualTo("id", id)
-            .get()
-            .addOnSuccessListener { row ->
-                for (obj in row) {
-                    result = mapper.fromMap(obj.data)
-                }
-            }
-            .addOnFailureListener {
-                Log.d("debug", "Falha: $it")
-            }
-            .await()
 
         return result
     }
@@ -121,7 +95,7 @@ class ProdutoController(override val mapper: Mapper<Produto>) : BaseController<P
             .document(id)
             .delete()
             .addOnSuccessListener {
-                Log.d("debug", "Produto inserido com sucesso")
+                Log.d("debug", "Produto deletado com sucesso")
                 result = true
             }
             .addOnFailureListener {
@@ -140,7 +114,7 @@ class ProdutoController(override val mapper: Mapper<Produto>) : BaseController<P
             .document(produto.id)
             .update(mapper.toMap(produto))
             .addOnSuccessListener {
-                Log.d("debug", "Produto inserido com sucesso")
+                Log.d("debug", "Produto alterado com sucesso")
                 result = true
             }
             .addOnFailureListener {

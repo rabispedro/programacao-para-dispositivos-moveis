@@ -82,40 +82,33 @@ fun PageRouting(views: List<View>) {
 
     Scaffold(
         bottomBar = {
-            NavigationBar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(0.dp)
-                ) {
-                    views.forEachIndexed { index, view ->
-                        NavigationBarItem(
-                            selected = selectedView == index,
-                            onClick = {
-                                navigator.navigate(route = view.displayName)
-                                selectedView = index
-                            },
-                            icon = {
-                                Icon(
-                                    view.displayIcon,
-                                    contentDescription = view.displayName,
-                                    modifier = Modifier,
-                                    tint = view.tintColor
-                                )
-                            },
-                            modifier = Modifier.padding(0.dp),
-                            enabled = true,
-                            label = { Text(view.displayName) },
-                            alwaysShowLabel = true,
-                            colors = NavigationBarItemDefaults.colors(),
-                            interactionSource = null
-                        )
-                    }
+            NavigationBar(modifier = Modifier.fillMaxWidth().padding(0.dp)) {
+                views.forEachIndexed { index, view ->
+                    NavigationBarItem(selected = selectedView == index,
+                        onClick = {
+                            navigator.navigate(route = view.displayName)
+                            selectedView = index
+                        },
+                        icon = {
+                            Icon(
+                                view.displayIcon,
+                                contentDescription = view.displayName,
+                                modifier = Modifier,
+                                tint = view.tintColor
+                            )
+                        },
+                        modifier = Modifier.padding(0.dp),
+                        enabled = true,
+                        label = { Text(view.displayName) },
+                        alwaysShowLabel = true,
+                        colors = NavigationBarItemDefaults.colors(),
+                        interactionSource = null
+                    )
                 }
+            }
         },
         snackbarHost = { SnackbarHost(snackbar) },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
-        content = {
-            views[selectedView].View(scope, snackbar)
-        }
+        content = { views[selectedView].View(scope, snackbar) }
     )
 }

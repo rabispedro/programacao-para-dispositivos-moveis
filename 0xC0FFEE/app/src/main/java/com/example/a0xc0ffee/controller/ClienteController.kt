@@ -53,38 +53,14 @@ class ClienteController(override val mapper: Mapper<Cliente>) : BaseController<C
         repository
             .collection(collection)
             .whereEqualTo("cpf", texto)
-            .whereEqualTo("nome", texto)
-            .whereEqualTo("telefone", texto)
-            .whereEqualTo("endereco", texto)
             .get()
             .addOnSuccessListener { row ->
                 for (obj in row) {
-                    result.add(mapper.fromMap(obj.data))
+                    val entity = mapper.fromMap(obj.data)
+                    result.add(entity)
                 }
             }
             .await()
-
-        Log.d("debug", "Result:")
-        result.forEach { Log.d("debug", "$it") }
-
-        return result
-    }
-
-    suspend fun buscar(cpf: String): Cliente {
-        var result: Cliente = Cliente("11111111111", "Tese", "1193333333", "endereco", "instagram.com/teste")
-
-        repository
-            .collection(collection)
-            .whereEqualTo("cpf", cpf)
-            .get()
-            .addOnSuccessListener { row ->
-                for (obj in row) {
-                    result = mapper.fromMap(obj.data)
-                }
-            }
-            .addOnFailureListener {
-                Log.d("debug", "Falha: $it")
-            }
 
         return result
     }

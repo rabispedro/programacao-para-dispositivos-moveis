@@ -49,12 +49,12 @@ import com.example.a0xc0ffee.model.Produto
 import com.example.a0xc0ffee.model.aggregate.Carrinho
 import com.example.a0xc0ffee.model.type.PontoDaTorra
 import com.example.a0xc0ffee.model.type.TipoDoGrao
+import com.example.a0xc0ffee.ui.theme.icon.AddShoppingCartIcon
 import com.example.a0xc0ffee.ui.theme.icon.DeleteIcon
 import com.example.a0xc0ffee.ui.theme.icon.EditIcon
 import com.example.a0xc0ffee.ui.theme.icon.LocalCoffeeIcon
 import com.example.a0xc0ffee.ui.theme.icon.PlusIcon
 import com.example.a0xc0ffee.ui.theme.icon.SearchIcon
-import com.example.a0xc0ffee.ui.theme.icon.ShoppingCartIcon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -64,18 +64,16 @@ class ProdutoView(val controller: ProdutoController): View {
     override val displayIcon = LocalCoffeeIcon
     override val tintColor = Color(0xFF8B4513)
 
-    private val TAMANHO_TEXTO_PARA_BUSCAR = 4
+    private val TAMANHO_TEXTO_PARA_BUSCAR = 7
 
     @Composable
     override fun View(scope: CoroutineScope, snackbar: SnackbarHostState) {
         val estadoProdutos = rememberLazyListState()
-//        val produtos = remember { SnapshotStateList<Produto>() }
         val produtos = remember { mutableStateListOf<Produto>() }
 
         var estadoCriarProduto by remember { mutableStateOf(false) }
         var estadoEditarProduto by remember { mutableStateOf(false) }
         var estadoRemoverProduto by remember { mutableStateOf(false) }
-
 
         var estadoAdicionarProduto by remember { mutableStateOf(false) }
         var produto by remember { mutableStateOf<Produto?>(null) }
@@ -83,66 +81,49 @@ class ProdutoView(val controller: ProdutoController): View {
         var estadoBuscarProduto by remember { mutableStateOf(false) }
         var textoBuscaProduto by remember { mutableStateOf("") }
 
-        LaunchedEffect(Unit) {
+        LaunchedEffect(scope) {
             produtos.clear()
-            val entities = if (estadoBuscarProduto) controller.listar(textoBuscaProduto)
-            else controller.listar()
-
+            val entities = controller.listar()
             produtos.addAll(entities)
-            Log.d("debug", "Procurar com texto: ${estadoBuscarProduto}")
             Log.d("debug", "Produtos: ${produtos.size}")
         }
 
-        Column(modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-
+        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.padding(bottom = 30.dp))
 
             Text(text = "Produtos",
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp,
-                modifier = Modifier.fillMaxWidth().padding(8.dp))
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
 
             Spacer(modifier = Modifier.padding(bottom = 16.dp))
 
-            TextField(
-                value = textoBuscaProduto,
+            TextField(value = textoBuscaProduto,
                 onValueChange = {
                     textoBuscaProduto = it.trim()
                     estadoBuscarProduto = (textoBuscaProduto.length >= TAMANHO_TEXTO_PARA_BUSCAR)
                 },
                 leadingIcon = { Icon(SearchIcon, "Lupa") },
                 placeholder = { Text("Um café gostoso é o...") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 40.dp)
+                modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp)
             )
 
             Spacer(modifier = Modifier.padding(bottom = 20.dp))
 
-//            Surface(modifier = Modifier.fillMaxWidth(), shadowElevation = 4.dp) {
-                LazyColumn(
-                    state = estadoProdutos,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(480.dp, 500.dp)
-                        .background(Color.LightGray),
-                    content = {
-                        items(produtos) {
-//                        produtos.forEach {
-                            Row (horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color.Gray)
-                                .padding(8.dp)
-                                .heightIn(40.dp)) {
+            LazyColumn(state = estadoProdutos,
+                modifier = Modifier.fillMaxWidth().heightIn(480.dp, 500.dp).background(Color.LightGray),
+                content = {
+                    items(produtos) {
+                        Row (horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().background(Color.Gray).padding(8.dp).heightIn(40.dp)) {
 
                                 Log.d("debug", "Item: $it")
 
                                 Column(verticalArrangement = Arrangement.SpaceEvenly) {
-                                    Text(text = "${it.tipoDoGrao.localize()}", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                    Text(text = "${it.pontoDaTorra.localize()}", fontWeight = FontWeight.Bold)
+                                    Text(text = it.tipoDoGrao.localize(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                    Text(text = it.pontoDaTorra.localize(), fontWeight = FontWeight.Bold)
                                     Text("R$: ${it.valor}")
                                     Text(text = if (it.blend) "Blendelicioso" else "Desblendado", fontWeight = FontWeight.Light)
                                 }
@@ -154,7 +135,7 @@ class ProdutoView(val controller: ProdutoController): View {
                                             produto = it
                                         }) {
 
-                                        Icon(ShoppingCartIcon, "Adicionar ao carrinho")
+                                        Icon(AddShoppingCartIcon, "Adicionar ao carrinho")
                                     }
 
                                     Button(modifier = Modifier.padding(horizontal = 4.dp),
@@ -177,22 +158,15 @@ class ProdutoView(val controller: ProdutoController): View {
                                 }
                             }
 
-                            Spacer(modifier = Modifier.padding(bottom = 4.dp))
-                        }
+                        Spacer(modifier = Modifier.padding(bottom = 4.dp))
                     }
-                )
-//            }
+                }
+            )
 
             Spacer(modifier = Modifier.padding(bottom = 10.dp))
 
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Button(onClick = { estadoCriarProduto = true },
-                    modifier = Modifier.padding(vertical = 4.dp)) {
-
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.End) {
+                Button(onClick = { estadoCriarProduto = true }, modifier = Modifier.padding(vertical = 4.dp)) {
                     Icon(PlusIcon, "Adicionar")
                 }
             }
@@ -200,29 +174,26 @@ class ProdutoView(val controller: ProdutoController): View {
             when {
                 estadoCriarProduto -> {
                     estadoCriarProduto = onCriarProduto(scope, snackbar)
-                    LaunchedEffect(Unit) {
+                }
+                estadoBuscarProduto -> {
+                    LaunchedEffect(scope) {
                         produtos.clear()
-                        val entities = if (estadoBuscarProduto) controller.listar(textoBuscaProduto)
-                        else controller.listar()
-
+                        val entities =controller.listar(textoBuscaProduto)
                         produtos.addAll(entities)
-                        Log.d("debug", "Procurar com texto: ${estadoBuscarProduto}")
                         Log.d("debug", "Produtos: ${produtos.size}")
+                        estadoBuscarProduto = false
+                        textoBuscaProduto = ""
                     }
                 }
-                estadoEditarProduto -> { estadoEditarProduto = onEditarProduto(scope, snackbar, produto!!) }
-                estadoRemoverProduto -> { estadoRemoverProduto = onRemoverProduto(scope, snackbar, produto!!) }
-                estadoAdicionarProduto -> estadoAdicionarProduto = onAdicionarProdutoAoCarrinho(scope, snackbar, produto!!)
-            }
-
-            LaunchedEffect(Unit) {
-                produtos.clear()
-                val entities = if (estadoBuscarProduto) controller.listar(textoBuscaProduto)
-                else controller.listar()
-
-                produtos.addAll(entities)
-                Log.d("debug", "Procurar com texto: ${estadoBuscarProduto}")
-                Log.d("debug", "Produtos: ${produtos.size}")
+                estadoEditarProduto -> {
+                    estadoEditarProduto = onEditarProduto(scope, snackbar, produto!!)
+                }
+                estadoRemoverProduto -> {
+                    estadoRemoverProduto = onRemoverProduto(scope, snackbar, produto!!)
+                }
+                estadoAdicionarProduto -> {
+                    estadoAdicionarProduto = onAdicionarProdutoAoCarrinho(scope, snackbar, produto!!)
+                }
             }
         }
     }
@@ -247,21 +218,16 @@ class ProdutoView(val controller: ProdutoController): View {
             text = {
                 Column {
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(onClick = { expandedTipoDoGrao = true },
-                            modifier = Modifier.fillMaxWidth()) {
-
+                        OutlinedButton(onClick = { expandedTipoDoGrao = true }, modifier = Modifier.fillMaxWidth()) {
                             Text("Tipo do Grão: $tipoDoGraoProduto")
                         }
                         DropdownMenu(expanded = expandedTipoDoGrao,
                             onDismissRequest = { expandedTipoDoGrao = false },
                             scrollState = scrollStateTipoDoGrao,
-                            modifier = Modifier
-                                .heightIn(100.dp, 120.dp)
-                                .fillMaxWidth(0.75f),
+                            modifier = Modifier.heightIn(100.dp, 120.dp).fillMaxWidth(0.75f),
                             content = {
                                 TipoDoGrao.entries.forEach {
-                                    DropdownMenuItem(
-                                        text = { Text(it.localize()) },
+                                    DropdownMenuItem(text = { Text(it.localize()) },
                                         onClick = {
                                             tipoDoGraoProduto = it.name
                                             expandedTipoDoGrao = false
@@ -275,21 +241,16 @@ class ProdutoView(val controller: ProdutoController): View {
                     Spacer(modifier = Modifier.padding(vertical = 4.dp))
 
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(onClick = { expandedPontoDaTorra = true },
-                            modifier = Modifier.fillMaxWidth()) {
-
+                        OutlinedButton(onClick = { expandedPontoDaTorra = true }, modifier = Modifier.fillMaxWidth()) {
                             Text("Ponto da Torra: $pontoDaTorraProduto")
                         }
                         DropdownMenu(expanded = expandedPontoDaTorra,
                             onDismissRequest = { expandedPontoDaTorra = false },
                             scrollState = scrollStatePontoDaTorra,
-                            modifier = Modifier
-                                .heightIn(100.dp, 120.dp)
-                                .fillMaxWidth(0.75f),
+                            modifier = Modifier.heightIn(100.dp, 120.dp).fillMaxWidth(0.75f),
                             content = {
                                 PontoDaTorra.entries.forEach {
-                                    DropdownMenuItem(
-                                        text = { Text(it.localize()) },
+                                    DropdownMenuItem(text = { Text(it.localize()) },
                                         onClick = {
                                             pontoDaTorraProduto = it.name
                                             expandedPontoDaTorra = false
@@ -317,10 +278,7 @@ class ProdutoView(val controller: ProdutoController): View {
                         verticalAlignment = Alignment.CenterVertically) {
 
                         Text("É um blend?")
-
-                        Checkbox(checked = blendProduto,
-                            onCheckedChange = { blendProduto = !blendProduto })
-
+                        Checkbox(checked = blendProduto, onCheckedChange = { blendProduto = !blendProduto })
                         Text(if (blendProduto) "Com toda certeza!" else "Não sei ao certo.")
                     }
                 }
@@ -372,21 +330,16 @@ class ProdutoView(val controller: ProdutoController): View {
             text = {
                 Column {
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(onClick = { expandedTipoDoGrao = true },
-                            modifier = Modifier.fillMaxWidth()) {
-
+                        OutlinedButton(onClick = { expandedTipoDoGrao = true }, modifier = Modifier.fillMaxWidth()) {
                             Text("Tipo do Grão: $tipoDoGraoProduto")
                         }
                         DropdownMenu(expanded = expandedTipoDoGrao,
                             onDismissRequest = { expandedTipoDoGrao = false },
                             scrollState = scrollStateTipoDoGrao,
-                            modifier = Modifier
-                                .heightIn(100.dp, 120.dp)
-                                .fillMaxWidth(0.75f),
+                            modifier = Modifier.heightIn(100.dp, 120.dp).fillMaxWidth(0.75f),
                             content = {
                                 TipoDoGrao.entries.forEach {
-                                    DropdownMenuItem(
-                                        text = { Text(it.localize()) },
+                                    DropdownMenuItem(text = { Text(it.localize()) },
                                         onClick = {
                                             tipoDoGraoProduto = it.name
                                             expandedTipoDoGrao = false
@@ -400,21 +353,16 @@ class ProdutoView(val controller: ProdutoController): View {
                     Spacer(modifier = Modifier.padding(vertical = 4.dp))
 
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(onClick = { expandedPontoDaTorra = true },
-                            modifier = Modifier.fillMaxWidth()) {
-
+                        OutlinedButton(onClick = { expandedPontoDaTorra = true }, modifier = Modifier.fillMaxWidth()) {
                             Text("Ponto da Torra: $pontoDaTorraProduto")
                         }
                         DropdownMenu(expanded = expandedPontoDaTorra,
                             onDismissRequest = { expandedPontoDaTorra = false },
                             scrollState = scrollStatePontoDaTorra,
-                            modifier = Modifier
-                                .heightIn(100.dp, 120.dp)
-                                .fillMaxWidth(0.75f),
+                            modifier = Modifier.heightIn(100.dp, 120.dp).fillMaxWidth(0.75f),
                             content = {
                                 PontoDaTorra.entries.forEach {
-                                    DropdownMenuItem(
-                                        text = { Text(it.localize()) },
+                                    DropdownMenuItem(text = { Text(it.localize()) },
                                         onClick = {
                                             pontoDaTorraProduto = it.name
                                             expandedPontoDaTorra = false
@@ -442,10 +390,7 @@ class ProdutoView(val controller: ProdutoController): View {
                         verticalAlignment = Alignment.CenterVertically) {
 
                         Text("É um blend?")
-
-                        Checkbox(checked = blendProduto,
-                            onCheckedChange = { blendProduto = !blendProduto })
-
+                        Checkbox(checked = blendProduto, onCheckedChange = { blendProduto = !blendProduto })
                         Text(if (blendProduto) "Com toda certeza!" else "Não sei ao certo.")
                     }
                 }
@@ -531,7 +476,7 @@ class ProdutoView(val controller: ProdutoController): View {
 
         var quantidadeProduto by remember { mutableStateOf("1") }
 
-        LaunchedEffect(Unit) {
+        LaunchedEffect(scope) {
             clientes.clear()
             clientes.addAll(controller.listarClientes())
             Log.d("debug", "Clientes encontrados: ${clientes.size}")
@@ -542,21 +487,16 @@ class ProdutoView(val controller: ProdutoController): View {
             text = {
                 Column {
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(onClick = { expandedCliente = true },
-                            modifier = Modifier.fillMaxWidth()) {
-
+                        OutlinedButton(onClick = { expandedCliente = true }, modifier = Modifier.fillMaxWidth()) {
                             Text("Cliente: ${cliente?.nome?.value ?: ""}")
                         }
                         DropdownMenu(expanded = expandedCliente,
                             onDismissRequest = { expandedCliente = false },
                             scrollState = scrollStateCliente,
-                            modifier = Modifier
-                                .heightIn(100.dp, 120.dp)
-                                .fillMaxWidth(0.75f),
+                            modifier = Modifier.heightIn(100.dp, 120.dp).fillMaxWidth(0.75f),
                             content = {
                                 clientes.forEach {
-                                    DropdownMenuItem(
-                                        text = { Text(it.nome.value) },
+                                    DropdownMenuItem(text = { Text(it.nome.value) },
                                         onClick = {
                                             cliente = it
                                             expandedCliente = false
@@ -596,7 +536,6 @@ class ProdutoView(val controller: ProdutoController): View {
                             )
                         } else {
                             Carrinho.adicionarItem(cliente!!, produto, quantidadeProduto.toInt())
-
                             snackbar.showSnackbar(
                                 message = "Produto adicionado ao carrinho!",
                                 actionLabel = "X",

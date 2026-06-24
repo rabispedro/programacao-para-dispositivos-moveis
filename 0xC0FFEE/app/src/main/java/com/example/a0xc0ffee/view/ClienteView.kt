@@ -3,7 +3,6 @@ package com.example.a0xc0ffee.view
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,15 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -44,14 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a0xc0ffee.controller.ClienteController
 import com.example.a0xc0ffee.model.Cliente
-import com.example.a0xc0ffee.model.Produto
-import com.example.a0xc0ffee.model.type.PontoDaTorra
-import com.example.a0xc0ffee.model.type.TipoDoGrao
-import com.example.a0xc0ffee.model.vo.CPF
-import com.example.a0xc0ffee.model.vo.Endereco
-import com.example.a0xc0ffee.model.vo.Instagram
-import com.example.a0xc0ffee.model.vo.Nome
-import com.example.a0xc0ffee.model.vo.Telefone
 import com.example.a0xc0ffee.ui.theme.icon.DeleteIcon
 import com.example.a0xc0ffee.ui.theme.icon.EditIcon
 import com.example.a0xc0ffee.ui.theme.icon.PlusIcon
@@ -59,19 +45,17 @@ import com.example.a0xc0ffee.ui.theme.icon.SearchIcon
 import com.example.a0xc0ffee.ui.theme.icon.StoreFrontIcon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 class ClienteView(val controller: ClienteController): View {
     override val displayName = "Cliente"
     override val displayIcon = StoreFrontIcon
     override val tintColor = Color(0xFF8B4513)
 
-    private val TAMANHO_TEXTO_PARA_BUSCAR = 4
+    private val TAMANHO_TEXTO_PARA_BUSCAR = 11
 
     @Composable
     override fun View(scope: CoroutineScope, snackbar: SnackbarHostState) {
         val estadoClientes = rememberLazyListState()
-//        val clientes = remember { SnapshotStateList<Cliente>() }
         val clientes = remember { mutableStateListOf<Cliente>() }
 
         var estadoCriarCliente by remember { mutableStateOf(false) }
@@ -83,19 +67,14 @@ class ClienteView(val controller: ClienteController): View {
         var estadoBuscarCliente by remember { mutableStateOf(false) }
         var textoBuscaCliente by remember { mutableStateOf("") }
 
-        LaunchedEffect(Unit) {
+        LaunchedEffect(scope) {
             clientes.clear()
-            val entities = if (estadoBuscarCliente) controller.listar(textoBuscaCliente)
-            else controller.listar()
-
+            val entities = controller.listar()
             clientes.addAll(entities)
-            Log.d("debug", "Procurar com texto: ${estadoBuscarCliente}")
             Log.d("debug", "Clientes: ${clientes.size}")
         }
 
-        Column(modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-
+        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.padding(bottom = 30.dp))
 
             Text(text = "Clientes",
@@ -105,45 +84,30 @@ class ClienteView(val controller: ClienteController): View {
 
             Spacer(modifier = Modifier.padding(bottom = 16.dp))
 
-            TextField(
-                value = textoBuscaCliente,
+            TextField(value = textoBuscaCliente,
                 onValueChange = {
                     textoBuscaCliente = it.trim()
                     estadoBuscarCliente = (textoBuscaCliente.length >= TAMANHO_TEXTO_PARA_BUSCAR)
                 },
                 leadingIcon = { Icon(SearchIcon, "Lupa") },
-                placeholder = { Text("O nome que eu quero é...") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 40.dp)
+                placeholder = { Text("O CPF que eu quero é...") },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp)
             )
 
             Spacer(modifier = Modifier.padding(bottom = 20.dp))
 
-//            Surface(modifier = Modifier.fillMaxWidth(), shadowElevation = 4.dp) {
-            LazyColumn(
-                state = estadoClientes,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(480.dp, 500.dp)
-                    .background(Color.LightGray),
+            LazyColumn(state = estadoClientes,
+                modifier = Modifier.fillMaxWidth().heightIn(480.dp, 500.dp).background(Color.LightGray),
                 content = {
                     items(clientes) {
-//                        clientes.forEach {
                         Row (horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color.Gray)
-                                .padding(8.dp)
-                                .heightIn(40.dp)) {
-
-                            Log.d("debug", "Item: $it")
+                            modifier = Modifier.fillMaxWidth().background(Color.Gray).padding(8.dp).heightIn(40.dp)) {
 
                             Column(verticalArrangement = Arrangement.SpaceEvenly) {
-                                Text(text = "${it.nome.value}", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                Text(text = "${it.cpf.safeShow()}", fontWeight = FontWeight.Bold)
-                                Text("${it.instagram.value}", fontWeight = FontWeight.Light)
+                                Text(it.nome.value, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                Text(it.cpf.safeShow(), fontWeight = FontWeight.Bold)
+                                Text(it.instagram.value, fontWeight = FontWeight.Light)
                             }
 
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
@@ -171,18 +135,12 @@ class ClienteView(val controller: ClienteController): View {
                     }
                 }
             )
-//            }
 
             Spacer(modifier = Modifier.padding(bottom = 10.dp))
 
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Button(onClick = { estadoCriarCliente = true },
-                    modifier = Modifier.padding(vertical = 4.dp)) {
 
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.End) {
+                Button(onClick = { estadoCriarCliente = true }, modifier = Modifier.padding(vertical = 4.dp)) {
                     Icon(PlusIcon, "Adicionar")
                 }
             }
@@ -190,28 +148,23 @@ class ClienteView(val controller: ClienteController): View {
             when {
                 estadoCriarCliente -> {
                     estadoCriarCliente = onCriarCliente(scope, snackbar)
-                    LaunchedEffect(Unit) {
+                }
+                estadoBuscarCliente -> {
+                    LaunchedEffect(scope) {
                         clientes.clear()
-                        val entities = if (estadoBuscarCliente) controller.listar(textoBuscaCliente)
-                        else controller.listar()
-
+                        val entities = controller.listar(textoBuscaCliente)
                         clientes.addAll(entities)
-                        Log.d("debug", "Procurar com texto: ${estadoBuscarCliente}")
                         Log.d("debug", "Clientes: ${clientes.size}")
+                        textoBuscaCliente = ""
+                        estadoBuscarCliente = false
                     }
                 }
-                estadoEditarCliente -> { estadoEditarCliente = onEditarCliente(scope, snackbar, cliente!!) }
-                estadoRemoverCliente -> { estadoRemoverCliente = onRemoverCliente(scope, snackbar, cliente!!) }
-            }
-
-            LaunchedEffect(Unit) {
-                clientes.clear()
-                val entities = if (estadoBuscarCliente) controller.listar(textoBuscaCliente)
-                else controller.listar()
-
-                clientes.addAll(entities)
-                Log.d("debug", "Procurar com texto: ${estadoBuscarCliente}")
-                Log.d("debug", "Clientes: ${clientes.size}")
+                estadoEditarCliente -> {
+                    estadoEditarCliente = onEditarCliente(scope, snackbar, cliente!!)
+                }
+                estadoRemoverCliente -> {
+                    estadoRemoverCliente = onRemoverCliente(scope, snackbar, cliente!!)
+                }
             }
         }
     }
@@ -277,13 +230,19 @@ class ClienteView(val controller: ClienteController): View {
                     scope.launch {
                         val cliente = Cliente(cpfCliente, nomeCliente, telefoneCliente, enderecoCliente, instagramCliente)
 
-                        controller.cadastrar(cliente)
-
-                        snackbar.showSnackbar(
-                            message = "Cliente Criado",
-                            actionLabel = "X",
-                            duration = SnackbarDuration.Short
-                        )
+                        if (controller.cadastrar(cliente)) {
+                            snackbar.showSnackbar(
+                                message = "Cliente criado",
+                                actionLabel = "X",
+                                duration = SnackbarDuration.Short
+                            )
+                        } else {
+                            snackbar.showSnackbar(
+                                message = "Erro ao criar cliente",
+                                actionLabel = "X",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
                     }
                 }) {
                     Text("Confirmar")
@@ -333,7 +292,7 @@ class ClienteView(val controller: ClienteController): View {
                     Spacer(modifier = Modifier.padding(vertical = 4.dp))
 
                     OutlinedTextField(value = instagramCliente,
-                        onValueChange = {  instagramCliente = it.trim() },
+                        onValueChange = { instagramCliente = it.trim() },
                         label = { Text("Instagram") },
                         modifier = Modifier.fillMaxWidth())
                 }
@@ -343,17 +302,23 @@ class ClienteView(val controller: ClienteController): View {
                     state = false
 
                     scope.launch {
-                        val clienteEditado = Cliente(cliente.cpf.value, nomeCliente, telefoneCliente, enderecoCliente, instagramCliente)
+                        val clienteEditado = Cliente(
+                            cliente.cpf.value,
+                            nomeCliente,
+                            telefoneCliente,
+                            enderecoCliente,
+                            instagramCliente
+                        )
 
                         if (controller.alterar(clienteEditado)) {
                             snackbar.showSnackbar(
-                                message = "Cliente Editado",
+                                message = "Cliente editado!",
                                 actionLabel = "X",
                                 duration = SnackbarDuration.Short
                             )
                         } else {
                             snackbar.showSnackbar(
-                                message = "Erro ao editar o Cliente",
+                                message = "Erro ao editar o cliente",
                                 actionLabel = "X",
                                 duration = SnackbarDuration.Short
                             )
@@ -389,7 +354,7 @@ class ClienteView(val controller: ClienteController): View {
                             )
                         } else {
                             snackbar.showSnackbar(
-                                message = "Erro ao remover Cliente",
+                                message = "Erro ao remover cliente",
                                 actionLabel = "X",
                                 duration = SnackbarDuration.Short
                             )

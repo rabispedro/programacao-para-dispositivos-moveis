@@ -1,24 +1,67 @@
 package com.example.a0xc0ffee.controller
 
-import com.example.a0xc0ffee.model.Cliente
+import android.util.Log
 import com.example.a0xc0ffee.model.Pedido
 import com.example.a0xc0ffee.model.mapper.Mapper
+import com.google.firebase.firestore.Query
+import kotlinx.coroutines.tasks.await
 
 class PedidoController(override val mapper: Mapper<Pedido>) : BaseController<Pedido>("Pedido") {
+    suspend fun cadastrar(pedido: Pedido): Boolean {
+        var result = false
 
-    fun cadastrar(cpfCliente: String): Boolean {
-        return false
+        repository
+            .collection(collection)
+            .document(pedido.id)
+            .set(mapper.toMap(pedido))
+            .addOnSuccessListener {
+                Log.d("debug", "Pedido inserido com sucesso")
+                result = true
+            }
+            .addOnFailureListener {
+                Log.d("debug", "Falha: $it")
+                result = false
+            }
+            .await()
+
+        return result
     }
 
-    fun listar(cliente: Cliente): List<Pedido> {
-        return listOf()
+    suspend fun listar(): List<Pedido> {
+        val result: MutableList<Pedido> = mutableListOf()
+
+        repository
+            .collection(collection)
+            .orderBy("cliente.cpf", Query.Direction.ASCENDING)
+            .get()
+            .addOnSuccessListener { row ->
+                for (obj in row) {
+                    val entity = mapper.fromMap(obj.data)
+                    result.add(entity)
+                }
+            }
+            .addOnFailureListener {
+                Log.d("debug", "Falha: $it")
+            }
+            .await()
+
+        return result
     }
 
-    fun deletar(id: String): Boolean {
-        return false
-    }
+    suspend fun listar(texto: String): List<Pedido> {
+        val result: MutableList<Pedido> = mutableListOf()
 
-    fun alterar(pedido: Pedido): Boolean {
-        return false
+        repository
+            .collection(collection)
+            .whereEqualTo("cliente.cpf", texto)
+            .get()
+            .addOnSuccessListener { row ->
+                for (obj in row) {
+                    result.add(mapper.fromMap(obj.data))
+                }
+            }
+            .await()
+
+        return result
     }
 }

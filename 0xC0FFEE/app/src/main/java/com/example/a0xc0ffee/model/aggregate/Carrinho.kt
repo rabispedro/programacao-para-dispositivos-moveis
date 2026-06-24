@@ -4,12 +4,11 @@ import android.util.Log
 import com.example.a0xc0ffee.model.Cliente
 import com.example.a0xc0ffee.model.Produto
 
-
 // NOTE: Carrinho simplificado em memória: Singleton com Map<Cliente, Set<Pair<Produto, Int>>> e limite de 200 unidades de Produto por Cliente
 // "11122233344" -> [ {{"aaa", "CONILON", "MEDIA", 15.02, true }, 5}, {{"bbb", "GEISHA", "QUEIMADA", 11.99, false }, 100} ]
 // "99988877766" -> [ {{"ccc", "", "MUITO_CLARA", 5.02, false }, 1} ]
 object Carrinho {
-    const val MAXIMO: Int = 200
+    private const val MAXIMO: Int = 200
     private val carrinho = HashMap<Cliente, HashSet<Pair<Produto, Int>>>()
 
     fun limparCarrinho() {
@@ -18,6 +17,29 @@ object Carrinho {
 
     fun limparCarrinho(cliente: Cliente) {
         carrinho[cliente]?.clear()
+    }
+
+    fun temItems(cliente: Cliente): Boolean {
+        return carrinho[cliente]?.isNotEmpty() ?: false
+    }
+
+    fun temItems(): Boolean {
+        if (carrinho.isNotEmpty()) {
+            return carrinho.keys.any {
+                carrinho[it]!!.isNotEmpty()
+            }
+        }
+
+        return false
+    }
+
+    fun mostrarItems(cliente: Cliente): HashSet<Pair<Produto, Int>> {
+        Log.d("debug", "Mostrando items de ${cliente.nome.value}: ${carrinho[cliente]!!.size}")
+        return carrinho[cliente]!!
+    }
+
+    fun mostrarClientes(): List<Cliente> {
+        return carrinho.keys.toMutableList()
     }
 
     fun adicionarItem(cliente: Cliente, produto: Produto, quantidade: Int = 1) {
@@ -29,11 +51,14 @@ object Carrinho {
         }
 
         if (carrinho[cliente] == null) {
+            Log.d("debug", "Cliente sem pedidos no carrinho ainda")
             carrinho[cliente] = LinkedHashSet<Pair<Produto, Int>>()
         }
 
         var item = carrinho[cliente]?.find { it.first == produto }
+        Log.d("debug", "item do carrinho: $item")
         if (item == null) {
+            Log.d("debug", "Cliente não tem o produto no carrinho")
             item = Pair(produto, quantidade)
         }
 
@@ -41,6 +66,8 @@ object Carrinho {
             item = Pair(produto, MAXIMO)
             Log.d("debug", "Quantidade máxima do produto excedida")
         }
+
+        carrinho[cliente]?.add(item)
     }
 
     fun removerItem(cliente: Cliente, produto: Produto, quantidade: Int = 1) {
