@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "994312484029",
+    "project_id": "minas-gerais-queijos-e-cia",
+    "storage_bucket": "minas-gerais-queijos-e-cia.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994312484029:android:4da2b863d26119d68ef3d4",
+        "android_client_info": {
+          "package_name": "com.example.prova2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-XGhPIEsX3AVJ_C-HDEPmQeFkNSY7UoU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
