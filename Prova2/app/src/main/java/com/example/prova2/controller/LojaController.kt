@@ -3,6 +3,7 @@ package com.example.prova2.controller
 import android.util.Log
 import com.example.prova2.model.Loja
 import com.example.prova2.model.mapper.LojaMapper
+import com.google.firebase.firestore.AggregateSource
 import kotlinx.coroutines.tasks.await
 
 class LojaController : Controller("Loja") {
@@ -41,6 +42,26 @@ class LojaController : Controller("Loja") {
             .addOnFailureListener {
                 Log.d("debug", "Falha ao listar Loja: $it")
                 result.clear()
+            }
+            .await()
+
+        return result
+    }
+
+    suspend fun contar(): Int {
+        var result = 0
+
+        repository
+            .collection(collection)
+            .count()
+            .get(AggregateSource.SERVER)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    result = task.result.count.toInt()
+                }
+            }
+            .addOnFailureListener {
+                Log.d("debug", "Falha ao contar Loja: $it")
             }
             .await()
 

@@ -1,5 +1,6 @@
 package com.example.prova2.model
 
+import com.example.prova2.model.type.AparenciaAgradavel
 import com.example.prova2.model.type.AromaQueijo
 import com.example.prova2.model.type.FormatoRegularQueijo
 import com.example.prova2.model.type.SaborQueijo
@@ -12,6 +13,7 @@ data class Queijo(
     val nome: Nome,
     val tipo: TipoQueijo,
     val aroma: AromaQueijo,
+    val aparenciaAgradavel: AparenciaAgradavel,
     val formatoRegular: FormatoRegularQueijo,
     val sabor: SaborQueijo,
     val preco: Preco,
@@ -22,6 +24,7 @@ data class Queijo(
         nome: String,
         tipo: String,
         aroma: String,
+        aparenciaAgradavel: String,
         formatoRegular: String,
         sabor: String,
         preco: String,
@@ -32,6 +35,7 @@ data class Queijo(
             Nome(nome),
             TipoQueijo.valueOf(tipo),
             AromaQueijo.valueOf(aroma),
+            AparenciaAgradavel.valueOf(aparenciaAgradavel),
             FormatoRegularQueijo.valueOf(formatoRegular),
             SaborQueijo.valueOf(sabor),
             Preco(preco.toDouble()),

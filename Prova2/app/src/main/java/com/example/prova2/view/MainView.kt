@@ -1,5 +1,6 @@
 package com.example.prova2.view
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -26,11 +28,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateSet
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,20 +40,27 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.prova2.controller.LojaController
+import com.example.prova2.controller.QueijoController
 import com.example.prova2.model.Loja
+import com.example.prova2.model.Queijo
 import com.example.prova2.ui.theme.icon.PlusIcon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-class MainView(val controller: LojaController) : View {
-    override val displayName = "Main"
-    lateinit var lojas: SnapshotStateSet<Loja>
+class MainView(val lojaController: LojaController, val queijoController: QueijoController) : View {
+    @Composable
+    override fun TopBar(navigator: NavHostController, scope: CoroutineScope, snackbar: SnackbarHostState) {
+        Text(text = "Minas Gerais Queijos e Cia",
+            fontWeight = FontWeight.Bold,
+            fontSize = 28.sp,
+            modifier = Modifier.fillMaxWidth().padding(8.dp)
+        )
+    }
 
     @Composable
-    override fun ActionButton(scope: CoroutineScope, snackbar: SnackbarHostState) {
+    override fun ActionButton(navigator: NavHostController, scope: CoroutineScope, snackbar: SnackbarHostState) {
         var estadoCriarLoja by remember { mutableStateOf(false) }
 
         OutlinedButton(onClick = { estadoCriarLoja = true }) {
@@ -62,47 +70,52 @@ class MainView(val controller: LojaController) : View {
         when {
             estadoCriarLoja -> {
                 estadoCriarLoja = onCriarLoja(scope, snackbar)
-                LaunchedEffect(scope) {
-                    val entities = controller.listar()
-                    lojas.addAll(entities)
-                    Log.d("debug", "Lojas: ${lojas.size}")
-                }
             }
         }
     }
 
+    @SuppressLint("RestrictedApi")
     @Composable
     override fun View(navigator: NavHostController, scope: CoroutineScope, snackbar: SnackbarHostState) {
-        Log.d("debug", "Main Navigator: $navigator")
-
         val estadoLojas = rememberLazyListState()
-        lojas = remember { mutableStateSetOf() }
 
         var estadoEscolheLoja by remember { mutableStateOf(false) }
 
+        val lojas = remember { mutableStateListOf<Loja>() }
+
+        var queijoMaiorAroma by remember { mutableStateOf<Queijo?>(null) }
+        var queijoMaisCaro by remember { mutableStateOf<Queijo?>(null) }
+
+        var lojaComQueijosMaisFeios by remember { mutableStateOf<Loja?>(null) }
+
+        var quantidadeQueijos by remember { mutableStateOf(0) }
+        var quantidadeLojas by remember { mutableStateOf(0) }
+
         LaunchedEffect(scope) {
-            val entities = controller.listar()
+            val entities = lojaController.listar()
+            val entityMaiorAroma = queijoController.listarQueijoMaiorAroma()
+            val entityMaisCaro = queijoController.listarQueijoMaiosCaro()
+            val entityLojaComQueijosMaisFeios = queijoController.listarQueijosAparenciaRuim()
+            val entityQuantidadeLojas = lojaController.contar()
+            val entityQuantidadeQueijos = queijoController.contar()
+
             lojas.addAll(entities)
-            Log.d("debug", "Lojas: ${lojas.size}")
+            queijoMaiorAroma = entityMaiorAroma.firstOrNull()
+            queijoMaisCaro = entityMaisCaro.firstOrNull()
+            lojaComQueijosMaisFeios = entityLojaComQueijosMaisFeios.firstOrNull()
+            quantidadeLojas = entityQuantidadeLojas
+            quantidadeQueijos = entityQuantidadeQueijos
         }
 
         Column (modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(modifier = Modifier.padding(bottom = 38.dp))
+            Spacer(modifier = Modifier.padding(bottom = 16.dp))
 
-            Text(text = "Minas Gerais Queijos e Cia",
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                modifier = Modifier.fillMaxWidth().padding(8.dp)
-            )
-
-            Spacer(modifier = Modifier.padding(bottom = 32.dp))
-
-            Text("Unidades abertas", fontSize = 20.sp)
+            Text("Unidades abertas: ${lojas.size}", fontSize = 20.sp)
 
             Spacer(modifier = Modifier.padding(bottom = 16.dp))
 
             LazyColumn(state = estadoLojas,
-                modifier = Modifier.fillMaxWidth().heightIn(480.dp, 500.dp).background(Color.LightGray),
+                modifier = Modifier.fillMaxWidth().heightIn(350.dp, 400.dp).background(Color.LightGray),
                 content = {
                     items(lojas.toList()) {
                         Row(horizontalArrangement = Arrangement.SpaceBetween,
@@ -111,18 +124,29 @@ class MainView(val controller: LojaController) : View {
 
                             Log.d("debug", "Item: $it")
 
-                                Card(modifier = Modifier.fillMaxWidth(),
-                                    onClick = {
-//                                        lojaView.escolheLoja(it)
-                                        estadoEscolheLoja = true
-                                        Log.d("debug", "Navegando para a loja: ${it.nome.value}")
-                                    }
-                                ) {
-                                    Text(it.nome.value, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                    Text("Funcionários: ${it.quantidadeFuncionario.value}")
-                                    Text("Produção Diária: ${it.producaoDiaria.value}")
+                            Card(modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    estadoEscolheLoja = true
+                                    DataSource.setLoja(it)
                                 }
+                            ) {
+                                Text(
+                                    it.nome.value,
+                                    fontSize = 26.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                )
 
+                                Text(
+                                    "Funcionários: ${it.quantidadeFuncionario.value}",
+                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                )
+
+                                Text(
+                                    "Produção Diária: ${it.producaoDiaria.value}",
+                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.padding(bottom = 4.dp))
@@ -130,13 +154,31 @@ class MainView(val controller: LojaController) : View {
                 }
             )
 
-            Spacer(modifier = Modifier.padding(bottom = 10.dp))
+            Spacer(modifier = Modifier.padding(bottom = 12.dp))
+
+            Text("Quantidade de Lojas: $quantidadeLojas", fontSize = 20.sp)
+
+            Spacer(modifier = Modifier.padding(bottom = 16.dp))
+
+            Text("Quantidade de Queijos: $quantidadeQueijos", fontSize = 20.sp)
+
+            Spacer(modifier = Modifier.padding(bottom = 16.dp))
+
+            Text("Queijo com maior aroma: ${queijoMaiorAroma?.nome?.value} (${queijoMaiorAroma?.aroma?.capitalize()})", fontSize = 20.sp)
+
+            Spacer(modifier = Modifier.padding(bottom = 16.dp))
+
+            Text("Queijo mais caro: ${queijoMaisCaro?.nome?.value} (R$${queijoMaisCaro?.preco?.value})", fontSize = 20.sp)
+
+            Spacer(modifier = Modifier.padding(bottom = 16.dp))
+
+            Text("Loja com queijos mais feios: ${lojaComQueijosMaisFeios?.nome?.value}", fontSize = 20.sp)
         }
 
         when {
             estadoEscolheLoja -> {
                 estadoEscolheLoja = false
-                navigator.navigate("Loja")
+                navigator.navigate("LojaView")
             }
         }
     }
@@ -195,7 +237,7 @@ class MainView(val controller: LojaController) : View {
 
                         val loja = Loja(idLoja, nomeLoja, quantidadeFuncionarioLoja, producaoDiariaLoja)
 
-                        if (controller.cadastrar(loja)) {
+                        if (lojaController.cadastrar(loja)) {
                             snackbar.showSnackbar(
                                 message = "Loja criada",
                                 actionLabel = "X",
