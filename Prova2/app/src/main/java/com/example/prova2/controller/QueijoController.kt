@@ -8,36 +8,30 @@ import com.google.firebase.firestore.AggregateSource
 import kotlinx.coroutines.tasks.await
 
 class QueijoController : Controller("Queijo") {
-    suspend fun cadastrar(queijo: Queijo): Boolean {
-        var result = false
-
+    suspend fun cadastrar(queijo: Queijo, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(queijo.id)
             .set(QueijoMapper.toMap(queijo))
             .addOnSuccessListener {
-                Log.d("debug", "Queijo cadastrado com sucesso")
-                result = true
+                val result = Pair(true, "Queijo cadastrado com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha ao cadastrar Queijo: $it")
-                result = false
+                val result = Pair(false, "Falha ao cadastrar queijo")
+                callback(result)
             }
             .await()
-
-        return result
     }
 
-    suspend fun listar(loja: Loja): List<Queijo> {
-        val result: MutableList<Queijo> = mutableListOf()
-
-        Log.d("debug", "Listar por loja: ${loja.nome}")
+    suspend fun listar(loja: Loja, callback: (List<Queijo>) -> Unit) {
 
         repository
             .collection(collection)
             .orderBy("sabor")
             .get()
             .addOnSuccessListener { row ->
+                val result: MutableList<Queijo> = mutableListOf()
                 if (!row.isEmpty) {
                     row
                         .map { QueijoMapper.fromMap(it.data) }
@@ -47,23 +41,21 @@ class QueijoController : Controller("Queijo") {
                             result.add(it)
                         }
                 }
+                callback(result)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha ao listar Queijo: $it")
-                result.clear()
+                callback(listOf())
             }
             .await()
-
-        return result
     }
 
-    suspend fun listarQueijoMaiosCaro(): List<Queijo> {
-        val result: MutableList<Queijo> = mutableListOf()
-
+    suspend fun listarQueijoMaiosCaro(callback: (List<Queijo>) -> Unit) {
         repository
             .collection(collection)
             .get()
             .addOnSuccessListener { row ->
+                val result: MutableList<Queijo> = mutableListOf()
                 if (!row.isEmpty) {
                     val obj = row
                         .map { QueijoMapper.fromMap(it.data) }
@@ -71,23 +63,21 @@ class QueijoController : Controller("Queijo") {
 
                     result.add(obj)
                 }
+                callback(result)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha ao listar Queijo: $it")
-                result.clear()
+                callback(listOf())
             }
             .await()
-
-        return result
     }
 
-    suspend fun listarQueijoMaiorAroma(): List<Queijo> {
-        val result: MutableList<Queijo> = mutableListOf()
-
+    suspend fun listarQueijoMaiorAroma(callback: (List<Queijo>) -> Unit) {
         repository
             .collection(collection)
             .get()
             .addOnSuccessListener { row ->
+                val result: MutableList<Queijo> = mutableListOf()
                 if (!row.isEmpty) {
                     val obj = row
                         .map { QueijoMapper.fromMap(it.data) }
@@ -96,23 +86,21 @@ class QueijoController : Controller("Queijo") {
                     Log.d("debug", "MaiorAroma: $obj")
                     result.add(obj)
                 }
+                callback(result)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha ao listar Queijo: $it")
-                result.clear()
+                callback(listOf())
             }
             .await()
-
-        return result
     }
 
-    suspend fun listarQueijosAparenciaRuim(): List<Loja> {
-        val result: MutableList<Loja> = mutableListOf()
-
+    suspend fun listarQueijosAparenciaRuim(callback: (List<Loja>) -> Unit) {
         repository
             .collection(collection)
             .get()
             .addOnSuccessListener { row ->
+                val result: MutableList<Loja> = mutableListOf()
                 if (!row.isEmpty) {
                     val objs = row
                         .map { QueijoMapper.fromMap(it.data) }
@@ -127,43 +115,37 @@ class QueijoController : Controller("Queijo") {
                         result.add(obj)
                     }
                 }
+                callback(result)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha ao listar Queijo de aparência ruim: $it")
-                result.clear()
+                callback(listOf())
             }
             .await()
-
-        return result
     }
 
-    suspend fun contar(): Int {
-        var result = 0
-
+    suspend fun contar(callback: (Int) -> Unit) {
         repository
             .collection(collection)
             .count()
             .get(AggregateSource.SERVER)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    result = task.result.count.toInt()
-                }
+            .addOnSuccessListener {
+                val result = it.count.toInt()
+                callback(result)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha ao contar Queijo: $it")
+                callback(0)
             }
             .await()
-
-        return result
     }
 
-    suspend fun listarValorMedioQueijos(loja: Loja): Double {
-        var result = 0.0
-
+    suspend fun listarValorMedioQueijos(loja: Loja, callback: (Double) -> Unit) {
         repository
             .collection(collection)
             .get()
             .addOnSuccessListener { row ->
+                var result = 0.0
                 if (!row.isEmpty) {
                     val objs = row
                         .map { QueijoMapper.fromMap(it.data) }
@@ -171,43 +153,36 @@ class QueijoController : Controller("Queijo") {
 
                     if (!objs.isEmpty()) {
                         Log.d("debug", "Quantidade de queijos: ${objs.size}")
-
-                        val obj = objs
-                            .sumOf { it.preco.value / objs.size }
-
+                        val obj = objs.sumOf { it.preco.value / objs.size }
                         result = obj
                     }
                 }
+                callback(result)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha ao listar valor médio de Queijo: $it")
+//                callback(0.0)
             }
             .await()
-
-        return result
     }
 
-    suspend fun deletar(id: String): Boolean {
-        var result = false
-
+    suspend fun deletar(id: String, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(id)
             .delete()
             .addOnSuccessListener {
-                Log.d("debug", "Queijo deletado com sucesso")
-                result = true
+                val result = Pair(true, "Queijo deletado com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha ao deletar Queijo: $it")
+                val result = Pair(false, "Falha ao deletar queijo")
+                callback(result)
             }
             .await()
-
-        return result
     }
 
-    suspend fun deletar(loja: Loja): Boolean {
-        var result = false
+    suspend fun deletar(loja: Loja, callback: (Pair<Boolean, String>) -> Unit)  {
         val entities = mutableListOf<Queijo>()
 
         repository
@@ -222,7 +197,6 @@ class QueijoController : Controller("Queijo") {
                     if (!objs.isEmpty()) {
                         Log.d("debug", "Queijo a ser deletado: ${objs.size}")
                         entities.addAll(objs)
-                        result = true
                     }
                 }
             }
@@ -237,38 +211,34 @@ class QueijoController : Controller("Queijo") {
                 .document(it.id)
                 .delete()
                 .addOnSuccessListener {
-                    Log.d("debug", "Queijo deletado com sucesso")
+                    val result = Pair(true, "Queijo deletado com sucesso")
+                    callback(result)
                 }
                 .addOnFailureListener {
-                    Log.d("debug", "Falha ao deletar Queijo: $it")
+                    val result = Pair(true, "Falha ao deletar queijo")
+                    callback(result)
                 }
                 .await()
         }
-
-        return result
     }
 
-    suspend fun alterar(queijo: Queijo): Boolean {
-        var result = false
-
+    suspend fun alterar(queijo: Queijo, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(queijo.id)
             .update(QueijoMapper.toMap(queijo))
             .addOnSuccessListener {
-                Log.d("debug", "Queijo alterado com sucesso")
-                result = true
+                val result = Pair(true, "Queijo alterado com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha ao alterar Queijo: $it")
+                val result = Pair(false, "Falha ao alterar queijo")
+                callback(result)
             }
             .await()
-
-        return result
     }
 
-    suspend fun alterar(loja: Loja): Boolean {
-        var result = false
+    suspend fun alterar(loja: Loja, callback: (Pair<Boolean, String>) -> Unit) {
         val entities = mutableListOf<Queijo>()
 
         repository
@@ -296,7 +266,6 @@ class QueijoController : Controller("Queijo") {
                     if (!objs.isEmpty()) {
                         Log.d("debug", "Queijo a ser alterado: ${objs.size}")
                         entities.addAll(objs)
-                        result = true
                     }
                 }
             }
@@ -311,17 +280,14 @@ class QueijoController : Controller("Queijo") {
                 .document(it.id)
                 .update(QueijoMapper.toMap(it))
                 .addOnSuccessListener {
-                    Log.d("debug", "Queijo alterado com sucesso")
-                    result = true
+                    val result = Pair(true, "Queijo alterado com sucesso")
+                    callback(result)
                 }
                 .addOnFailureListener {
-                    Log.d("debug", "Falha ao alterar Queijo: $it")
+                    val result = Pair(false, "Falha ao alterar queijo")
+                    callback(result)
                 }
                 .await()
         }
-
-        return result
     }
-
-
 }

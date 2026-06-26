@@ -82,10 +82,10 @@ class ProdutoView(val controller: ProdutoController): View {
         var textoBuscaProduto by remember { mutableStateOf("") }
 
         LaunchedEffect(scope) {
-            produtos.clear()
-            val entities = controller.listar()
-            produtos.addAll(entities)
-            Log.d("debug", "Produtos: ${produtos.size}")
+            controller.listar {
+                produtos.clear()
+                produtos.addAll(it)
+            }
         }
 
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {

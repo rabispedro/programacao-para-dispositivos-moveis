@@ -27,25 +27,19 @@ class PedidoController(override val mapper: Mapper<Pedido>) : BaseController<Ped
         return result
     }
 
-    suspend fun listar(): List<Pedido> {
-        val result: MutableList<Pedido> = mutableListOf()
-
+    suspend fun listar(callback: (List<Pedido>) -> Unit) {
         repository
             .collection(collection)
             .orderBy("cliente.cpf", Query.Direction.ASCENDING)
             .get()
-            .addOnSuccessListener { row ->
-                for (obj in row) {
-                    val entity = mapper.fromMap(obj.data)
-                    result.add(entity)
-                }
+            .addOnSuccessListener {
+                val entities = it.map{ entity -> mapper.fromMap(entity.data) }
+                callback(entities)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha: $it")
             }
             .await()
-
-        return result
     }
 
     suspend fun listar(texto: String): List<Pedido> {

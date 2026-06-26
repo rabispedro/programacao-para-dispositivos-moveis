@@ -93,19 +93,33 @@ class MainView(val lojaController: LojaController, val queijoController: QueijoC
         var quantidadeLojas by remember { mutableStateOf(0) }
 
         LaunchedEffect(scope) {
-            val entities = lojaController.listar()
-            val entityMaiorAroma = queijoController.listarQueijoMaiorAroma()
-            val entityMaisCaro = queijoController.listarQueijoMaiosCaro()
-            val entityLojaComQueijosMaisFeios = queijoController.listarQueijosAparenciaRuim()
-            val entityQuantidadeLojas = lojaController.contar()
-            val entityQuantidadeQueijos = queijoController.contar()
+            Log.d("debug", "Launched Effect")
+            lojaController.listar { it ->
+                it.forEach { Log.d("debug", it.toString()) }
+                lojas.clear()
+                lojas.addAll(it)
+            }
 
-            lojas.addAll(entities)
-            queijoMaiorAroma = entityMaiorAroma.firstOrNull()
-            queijoMaisCaro = entityMaisCaro.firstOrNull()
-            lojaComQueijosMaisFeios = entityLojaComQueijosMaisFeios.firstOrNull()
-            quantidadeLojas = entityQuantidadeLojas
-            quantidadeQueijos = entityQuantidadeQueijos
+            lojaController.contar {
+                quantidadeLojas = it
+                Log.d("debug", "Contando $quantidadeLojas loja(s)")
+            }
+
+            queijoController.listarQueijoMaiorAroma {
+                queijoMaiorAroma = it.firstOrNull()
+            }
+
+            queijoController.listarQueijoMaiosCaro {
+                queijoMaisCaro = it.firstOrNull()
+            }
+
+            queijoController.listarQueijosAparenciaRuim {
+                lojaComQueijosMaisFeios = it.firstOrNull()
+            }
+
+            queijoController.contar {
+                quantidadeQueijos = it
+            }
         }
 
         Column (modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -237,26 +251,24 @@ class MainView(val lojaController: LojaController, val queijoController: QueijoC
                     scope.launch {
                         val idLoja = UUID.randomUUID().toString()
 
-                        Log.d("debug", "Id: $idLoja")
-                        Log.d("debug", "Nome: $nomeLoja")
-                        Log.d("debug", "QuantidadeFuncionario: $quantidadeFuncionarioLoja")
-                        Log.d("debug", "ProcucaoDiaria: $producaoDiariaLoja")
+                        val loja = Loja(
+                            idLoja,
+                            nomeLoja,
+                            quantidadeFuncionarioLoja,
+                            producaoDiariaLoja
+                        )
 
-                        val loja = Loja(idLoja, nomeLoja, quantidadeFuncionarioLoja, producaoDiariaLoja)
+                        var result = Pair(false, "")
 
-                        if (lojaController.cadastrar(loja)) {
-                            snackbar.showSnackbar(
-                                message = "Loja criada",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao criar loja",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        lojaController.cadastrar(loja) {
+                            result = it
                         }
+
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }) {
                     Text("Confirmar")

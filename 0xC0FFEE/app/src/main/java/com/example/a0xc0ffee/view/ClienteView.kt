@@ -68,10 +68,10 @@ class ClienteView(val controller: ClienteController): View {
         var textoBuscaCliente by remember { mutableStateOf("") }
 
         LaunchedEffect(scope) {
-            clientes.clear()
-            val entities = controller.listar()
-            clientes.addAll(entities)
-            Log.d("debug", "Clientes: ${clientes.size}")
+            controller.listar {
+                clientes.clear()
+                clientes.addAll(it)
+            }
         }
 
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {

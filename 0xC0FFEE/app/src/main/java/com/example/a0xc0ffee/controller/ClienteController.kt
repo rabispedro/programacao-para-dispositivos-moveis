@@ -4,7 +4,6 @@ import android.util.Log
 import com.example.a0xc0ffee.model.Cliente
 import com.example.a0xc0ffee.model.mapper.Mapper
 import kotlinx.coroutines.tasks.await
-import kotlin.collections.forEach
 
 class ClienteController(override val mapper: Mapper<Cliente>) : BaseController<Cliente>("Cliente") {
     suspend fun cadastrar(cliente: Cliente): Boolean {
@@ -27,24 +26,18 @@ class ClienteController(override val mapper: Mapper<Cliente>) : BaseController<C
         return result
     }
 
-    suspend fun listar(): List<Cliente> {
-        val result: MutableList<Cliente> = mutableListOf()
-
+    suspend fun listar(callback: (List<Cliente>) -> Unit) {
         repository
             .collection(collection)
             .get()
-            .addOnSuccessListener { row ->
-                for (obj in row) {
-                    val entity = mapper.fromMap(obj.data)
-                    result.add(entity)
-                }
+            .addOnSuccessListener {
+                val entities = it.map { entity -> mapper.fromMap(entity.data) }
+                callback(entities)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha: $it")
             }
             .await()
-
-        return result
     }
 
     suspend fun listar(texto: String): List<Cliente> {

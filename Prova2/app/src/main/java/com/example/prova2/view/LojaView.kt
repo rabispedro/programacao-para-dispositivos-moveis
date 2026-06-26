@@ -155,15 +155,13 @@ class LojaView(val lojaController: LojaController, val queijoController: QueijoC
         val valorMedioQueijos = remember { mutableDoubleStateOf(0.0) }
 
         LaunchedEffect(scope) {
-            val entities = queijoController.listar(DataSource.getLoja()!!)
-            val entityMediaQueijos = queijoController.listarValorMedioQueijos(DataSource.getLoja()!!)
+            queijoController.listar(DataSource.getLoja()!!) {
+                queijos.addAll(it)
+            }
 
-            Log.d("debug", "Entity Valor Médio dos Queijos: $entityMediaQueijos")
-
-            queijos.addAll(entities)
-            valorMedioQueijos.doubleValue = entityMediaQueijos
-
-            Log.d("debug", "State Valor Médio dos Queijos: $valorMedioQueijos")
+            queijoController.listarValorMedioQueijos(DataSource.getLoja()!!) {
+                valorMedioQueijos.doubleValue = it
+            }
         }
 
         Column (modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -410,19 +408,17 @@ class LojaView(val lojaController: LojaController, val queijoController: QueijoC
                             DataSource.getLoja()!!
                         )
 
-                        if (queijoController.cadastrar(queijo)) {
-                            snackbar.showSnackbar(
-                                message = "Queijo criado",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao criar queijo",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        var result = Pair(false, "")
+
+                        queijoController.cadastrar(queijo) {
+                            result = it
                         }
+
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }) {
                     Text("Confirmar")
@@ -610,19 +606,17 @@ class LojaView(val lojaController: LojaController, val queijoController: QueijoC
                             DataSource.getLoja()!!
                         )
 
-                        if (queijoController.alterar(queijo)) {
-                            snackbar.showSnackbar(
-                                message = "Queijo editado",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao editar queijo",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        var result = Pair(false, "")
+
+                        queijoController.alterar(queijo) {
+                            result = it
                         }
+
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }) {
                     Text("Confirmar")
@@ -646,19 +640,17 @@ class LojaView(val lojaController: LojaController, val queijoController: QueijoC
                     state = false
 
                     scope.launch {
-                        if (queijoController.deletar(queijo.id)) {
-                            snackbar.showSnackbar(
-                                message = "Queijo removido",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao remover queijo",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        var result = Pair(false, "")
+
+                        queijoController.deletar(queijo.id) {
+                            result = it
                         }
+
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }) {
                     Text("Confirmar")
@@ -715,22 +707,30 @@ class LojaView(val lojaController: LojaController, val queijoController: QueijoC
                     state = false
 
                     scope.launch {
-                        val lojaEditada = Loja(loja.id, nomeLoja, quantidadeFuncionarioLoja, producaoDiariaLoja)
+                        val lojaEditada = Loja(
+                            loja.id,
+                            nomeLoja,
+                            quantidadeFuncionarioLoja,
+                            producaoDiariaLoja
+                        )
 
-                        if (lojaController.alterar(lojaEditada)) {
-                            queijoController.alterar(lojaEditada)
-                            snackbar.showSnackbar(
-                                message = "Loja editada",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao editar loja",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        var result = Pair(false, "")
+
+                        lojaController.alterar(lojaEditada) {
+                            result = it
                         }
+
+                        if (result.first) {
+                            queijoController.alterar(lojaEditada) {
+                                Log.d("debug", "Queijo deletado? $it.first")
+                            }
+                        }
+
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }) {
                     Text("Confirmar")
@@ -754,20 +754,24 @@ class LojaView(val lojaController: LojaController, val queijoController: QueijoC
                     state = false
 
                     scope.launch {
-                        if (lojaController.deletar(loja.id)) {
-                            queijoController.deletar(loja)
-                            snackbar.showSnackbar(
-                                message = "Produto removido",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        var result = Pair(false, "")
+
+                        lojaController.deletar(loja.id) {
+                            result = it
+                        }
+
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
+
+                        if (result.first) {
+                            queijoController.deletar(loja) {
+                                Log.d("debug", "Queijo deletado? $it.first")
+                            }
+
                             navigator.navigate("MainView")
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao remover loja",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
                         }
                     }
                 }) {

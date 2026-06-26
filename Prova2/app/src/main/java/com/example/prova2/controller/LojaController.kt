@@ -7,102 +7,80 @@ import com.google.firebase.firestore.AggregateSource
 import kotlinx.coroutines.tasks.await
 
 class LojaController : Controller("Loja") {
-    suspend fun cadastrar(loja: Loja): Boolean {
-        var result = false
-
+    suspend fun cadastrar(loja: Loja, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(loja.id)
             .set(LojaMapper.toMap(loja))
             .addOnSuccessListener {
-                Log.d("debug", "Loja cadastrada com sucesso")
-                result = true
+                callback(Pair(true, "Loja cadastrada com sucesso"))
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha ao cadastrar Loja: $it")
-                result = false
+                callback(Pair(false, "Falha ao cadastrar loja"))
             }
             .await()
-
-        return result
     }
 
-    suspend fun listar(): List<Loja> {
-        val result: MutableList<Loja> = mutableListOf()
-
+    suspend fun listar(calback: (List<Loja>) -> Unit) {
         repository
             .collection(collection)
             .get()
             .addOnSuccessListener {
-                it.forEach { entity ->
-                    Log.d("debug", "Loja listada: ${entity.data}")
-                    result.add(LojaMapper.fromMap(entity.data))
-                }
+                val result = it
+                    .map { entity -> LojaMapper.fromMap(entity.data) }
+                calback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha ao listar Loja: $it")
-                result.clear()
+                Log.d("debug2", "Falha ao listar Loja: $it")
             }
             .await()
-
-        return result
     }
 
-    suspend fun contar(): Int {
-        var result = 0
-
+    suspend fun contar(callback: (Int) -> Unit) {
         repository
             .collection(collection)
             .count()
             .get(AggregateSource.SERVER)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    result = task.result.count.toInt()
-                }
+            .addOnSuccessListener {
+                val result = it.count.toInt()
+                callback(result)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha ao contar Loja: $it")
+                callback(0)
             }
             .await()
-
-        return result
     }
 
-    suspend fun deletar(id: String): Boolean {
-        var result = false
-
+    suspend fun deletar(id: String, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(id)
             .delete()
             .addOnSuccessListener {
-                Log.d("debug", "Loja deletada com sucesso")
-                result = true
+                val result = Pair(true, "Loja deletada com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha ao deletar Loja: $it")
+                val result = Pair(false, "Falha ao deletar loja")
+                callback(result)
             }
             .await()
-
-        return result
     }
 
-    suspend fun alterar(loja: Loja): Boolean {
-        var result = false
-
+    suspend fun alterar(loja: Loja, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(loja.id)
             .update(LojaMapper.toMap(loja))
             .addOnSuccessListener {
-                Log.d("debug", "Loja alterada com sucesso")
-                result = true
+                val result = Pair(true, "Loja alterada com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha ao alterar Loja: $it")
+                val result = Pair(true, "Falha ao alterar loja")
+                callback(result)
             }
             .await()
-
-        return result
     }
 }

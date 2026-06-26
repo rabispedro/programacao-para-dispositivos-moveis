@@ -30,24 +30,18 @@ class ProdutoController(override val mapper: Mapper<Produto>) : BaseController<P
         return result
     }
 
-    suspend fun listar(): List<Produto> {
-        val result: MutableList<Produto> = mutableListOf()
-
+    suspend fun listar(callback: (List<Produto>) -> Unit) {
         repository
             .collection(collection)
             .get()
-            .addOnSuccessListener { row ->
-                for (obj in row) {
-                    val entity = mapper.fromMap(obj.data)
-                    result.add(entity)
-                }
+            .addOnSuccessListener {
+                val entities = it.map { entity -> mapper.fromMap(entity.data) }
+                callback(entities)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha: $it")
             }
             .await()
-
-        return result
     }
 
     suspend fun listar(texto: String): List<Produto> {

@@ -72,10 +72,10 @@ class PedidoView(val controller: PedidoController): View {
         var textoBuscaPedido by remember { mutableStateOf("") }
 
         LaunchedEffect(scope) {
-            pedidos.clear()
-            val entities = controller.listar()
-            pedidos.addAll(entities)
-            Log.d("debug", "Pedidos: ${pedidos.size}")
+            controller.listar {
+                pedidos.clear()
+                pedidos.addAll(it)
+            }
         }
 
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
