@@ -14,7 +14,7 @@ import java.time.LocalDate
 
 class RelatorioController(override val mapper: Mapper<Relatorio>) : BaseController<Relatorio>("Relatorio") {
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun listarClientesPorTipoDoGrao(): Map<String, List<Cliente>> {
+    suspend fun listarClientesPorTipoDoGrao(callback: (Map<String, List<Cliente>>) -> Unit) {
         val result = HashMap<String, MutableList<Cliente>>()
 
         Log.d("debug", "Inicializando mapa de Clientes por Tipo de Grão")
@@ -25,106 +25,78 @@ class RelatorioController(override val mapper: Mapper<Relatorio>) : BaseControll
         repository
             .collection("Pedido")
             .get()
-            .addOnSuccessListener { row ->
-                for (obj in row) {
+            .addOnSuccessListener {
+                it.forEach { obj ->
                     val entity = PedidoMapper.fromMap(obj.data)
 
-                    entity.items.forEach {
-                        if (!result[it.first.tipoDoGrao.localize()]!!.contains(entity.cliente)) {
-                            result[it.first.tipoDoGrao.localize()]!!.add(entity.cliente)
+                    entity.items.forEach { item ->
+                        if (!result[item.first.tipoDoGrao.localize()]!!.contains(entity.cliente)) {
+                            result[item.first.tipoDoGrao.localize()]!!.add(entity.cliente)
                         }
                     }
                 }
+                callback(result)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha: $it")
+                callback(mutableMapOf())
             }
             .await()
-
-        Log.d("debug", "Finalizando mapa de Clientes por Tipo de Grão")
-        result.keys.forEach {
-            Log.d("debug", "Grão ${it}: ${result[it]!!.size}")
-        }
-
-        return result
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun buscarClienteMaiorValor(): List<Cliente> {
-        val result: MutableList<Cliente> = mutableListOf()
-
+    suspend fun buscarClienteMaiorValor(callback: (List<Cliente>) -> Unit) {
         repository
             .collection("Pedido")
             .get()
-            .addOnSuccessListener { row ->
-                row.forEach {
-                    val obj = PedidoMapper.fromMap(it.data)
-                    Log.d("debug", "Item com total: ${obj.getTotal()}")
-                }
+            .addOnSuccessListener {
+                val result =  it
+                    .map { entity -> PedidoMapper.fromMap(entity.data) }
+                    .maxBy { entity -> entity.getTotal() }
 
-                val obj =  row
-                    .map { PedidoMapper.fromMap(it.data) }
-                    .maxBy { it.getTotal() }
-
-                Log.d("debug", "Pedido com maior valor: $obj")
-                result.add(obj.cliente)
+                callback(listOf(result.cliente))
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha: $it")
+                callback(listOf())
             }
             .await()
 
-        return result
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun buscarClienteMaiorQuantidade(): List<Cliente> {
-        val result: MutableList<Cliente> = mutableListOf()
-
+    suspend fun buscarClienteMaiorQuantidade(callback: (List<Cliente>) -> Unit) {
         repository
             .collection("Pedido")
             .get()
-            .addOnSuccessListener { row ->
-                row.forEach {
-                    val obj = PedidoMapper.fromMap(it.data)
-                    Log.d("debug", "Item com quantidade total: ${obj.getQuantidadeTotal()}")
-                }
+            .addOnSuccessListener {
+                val result =  it
+                    .map { entity -> PedidoMapper.fromMap(entity.data) }
+                    .maxBy { entity -> entity.getQuantidadeTotal() }
 
-                val obj =  row
-                    .map { PedidoMapper.fromMap(it.data) }
-                    .maxBy { it.getQuantidadeTotal() }
-
-                Log.d("debug", "Pedido com maior quantidade: $obj")
-                result.add(obj.cliente)
+                callback(listOf(result.cliente))
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha: $it")
             }
             .await()
-
-        return result
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun buscarVendasEntreDatas(inicio: LocalDate, fim: LocalDate): List<Pedido> {
-        val result: MutableList<Pedido> = mutableListOf()
-
+    suspend fun buscarVendasEntreDatas(inicio: LocalDate, fim: LocalDate, callback: (List<Pedido>) -> Unit) {
         repository
             .collection("Pedido")
             .startAfter("data", inicio)
             .endBefore("data", fim)
             .get()
-            .addOnSuccessListener { row ->
-                for (obj in row) {
-                    val entity = PedidoMapper.fromMap(obj.data)
-                    result.add(entity)
-                }
+            .addOnSuccessListener {
+                val result = it.map { entity -> PedidoMapper.fromMap(entity.data) }
+                callback(result)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha: $it")
+                callback(listOf())
             }
             .await()
-
-        return result
     }
 }

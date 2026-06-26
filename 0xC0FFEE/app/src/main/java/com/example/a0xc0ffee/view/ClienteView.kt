@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -111,22 +112,22 @@ class ClienteView(val controller: ClienteController): View {
                             }
 
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                                Button(modifier = Modifier.padding(horizontal = 4.dp),
+                                IconButton(modifier = Modifier.padding(horizontal = 4.dp),
                                     onClick = {
                                         estadoEditarCliente = true
                                         cliente = it
                                     }) {
 
-                                    Icon(EditIcon, "Editar")
+                                    Icon(EditIcon, "Editar", tint = Color.White)
                                 }
 
-                                Button(modifier = Modifier.padding(horizontal = 4.dp),
+                                IconButton(modifier = Modifier.padding(horizontal = 4.dp),
                                     onClick = {
                                         estadoRemoverCliente = true
                                         cliente = it
                                     }) {
 
-                                    Icon(DeleteIcon, "Remover")
+                                    Icon(DeleteIcon, "Remover", tint = Color.White)
                                 }
                             }
                         }
@@ -151,9 +152,11 @@ class ClienteView(val controller: ClienteController): View {
                 }
                 estadoBuscarCliente -> {
                     LaunchedEffect(scope) {
-                        clientes.clear()
-                        val entities = controller.listar(textoBuscaCliente)
-                        clientes.addAll(entities)
+                        controller.listar(textoBuscaCliente) {
+                            clientes.clear()
+                            clientes.addAll(it)
+                        }
+
                         Log.d("debug", "Clientes: ${clientes.size}")
                         textoBuscaCliente = ""
                         estadoBuscarCliente = false
@@ -228,21 +231,25 @@ class ClienteView(val controller: ClienteController): View {
                     state = false
 
                     scope.launch {
-                        val cliente = Cliente(cpfCliente, nomeCliente, telefoneCliente, enderecoCliente, instagramCliente)
+                        val cliente = Cliente(
+                            cpfCliente,
+                            nomeCliente,
+                            telefoneCliente,
+                            enderecoCliente,
+                            instagramCliente
+                        )
 
-                        if (controller.cadastrar(cliente)) {
-                            snackbar.showSnackbar(
-                                message = "Cliente criado",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao criar cliente",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        var result = Pair(false, "")
+
+                        controller.cadastrar(cliente) {
+                            result = it
                         }
+
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }) {
                     Text("Confirmar")
@@ -310,19 +317,17 @@ class ClienteView(val controller: ClienteController): View {
                             instagramCliente
                         )
 
-                        if (controller.alterar(clienteEditado)) {
-                            snackbar.showSnackbar(
-                                message = "Cliente editado!",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao editar o cliente",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        var result = Pair(false, "")
+
+                        controller.alterar(clienteEditado) {
+                            result = it
                         }
+
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }) {
                     Text("Confirmar")
@@ -346,19 +351,17 @@ class ClienteView(val controller: ClienteController): View {
                     state = false
 
                     scope.launch {
-                        if (controller.deletar(cliente.cpf.value)) {
-                            snackbar.showSnackbar(
-                                message = "Cliente removido!",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao remover cliente",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        var result = Pair(false, "")
+
+                        controller.deletar(cliente.cpf.value) {
+                            result = it
                         }
+
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }) {
                     Text("Confirmar")

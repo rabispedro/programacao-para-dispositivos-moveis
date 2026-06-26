@@ -152,9 +152,10 @@ class PedidoView(val controller: PedidoController): View {
                 }
                 estadoBuscarPedido -> {
                     LaunchedEffect(scope) {
-                        pedidos.clear()
-                        val entities = controller.listar(textoBuscaPedido)
-                        pedidos.addAll(entities)
+                        controller.listar(textoBuscaPedido) {
+                            pedidos.clear()
+                            pedidos.addAll(it)
+                        }
                         Log.d("debug", "Pedidos: ${pedidos.size}")
                         estadoBuscarPedido = false
                         textoBuscaPedido = ""
@@ -234,21 +235,21 @@ class PedidoView(val controller: PedidoController): View {
                                 LocalDate.now()
                             )
 
-                            if (controller.cadastrar(pedido)) {
-                                snackbar.showSnackbar(
-                                    message = "Pedido cadastrado!",
-                                    actionLabel = "X",
-                                    duration = SnackbarDuration.Short
-                                )
+                            var result = Pair(false, "")
 
-                                Carrinho.limparCarrinho(cliente!!)
-                            } else {
-                                snackbar.showSnackbar(
-                                    message = "Erro ao cadastrar pedido",
-                                    actionLabel = "X",
-                                    duration = SnackbarDuration.Short
-                                )
+                            controller.cadastrar(pedido) {
+                                result = it
                             }
+
+                            if (result.first) {
+                                Carrinho.limparCarrinho(cliente!!)
+                            }
+
+                            snackbar.showSnackbar(
+                                message = result.second,
+                                actionLabel = "X",
+                                duration = SnackbarDuration.Short
+                            )
                         }
                     }
                 }) {

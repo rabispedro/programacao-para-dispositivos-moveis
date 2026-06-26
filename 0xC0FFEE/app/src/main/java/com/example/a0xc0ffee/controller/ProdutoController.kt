@@ -5,29 +5,23 @@ import com.example.a0xc0ffee.model.Cliente
 import com.example.a0xc0ffee.model.Produto
 import com.example.a0xc0ffee.model.mapper.ClienteMapper
 import com.example.a0xc0ffee.model.mapper.Mapper
-import com.google.firebase.firestore.Filter
-import com.google.firestore.v1.StructuredQuery
 import kotlinx.coroutines.tasks.await
 
 class ProdutoController(override val mapper: Mapper<Produto>) : BaseController<Produto>("Produto") {
-    suspend fun cadastrar(produto: Produto): Boolean {
-        var result = false
-
+    suspend fun cadastrar(produto: Produto, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(produto.id)
             .set(mapper.toMap(produto))
             .addOnSuccessListener {
-                Log.d("debug", "Produto inserido com sucesso")
-                result = true
+                val result = Pair(true, "Produto inserido com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha: $it")
-                result = false
+                val result = Pair(false, "Falha ao inserir produto")
+                callback(result)
             }
             .await()
-
-        return result
     }
 
     suspend fun listar(callback: (List<Produto>) -> Unit) {
@@ -44,78 +38,65 @@ class ProdutoController(override val mapper: Mapper<Produto>) : BaseController<P
             .await()
     }
 
-    suspend fun listar(texto: String): List<Produto> {
-        val result: MutableList<Produto> = mutableListOf()
-
+    suspend fun listar(texto: String, callback: (List<Produto>) -> Unit) {
         repository
             .collection(collection)
-//            .whereEqualTo("id", texto)
             .get()
-            .addOnSuccessListener { row ->
-                row
+            .addOnSuccessListener {
+                val result = it
                     .filter { (it.data["id"] as String).contains(texto) }
-                    .forEach { result.add(mapper.fromMap(it.data)) }
+                    .map { entity -> mapper.fromMap(entity.data) }
+                callback(result)
+            }
+            .addOnFailureListener {
+                callback(listOf())
             }
             .await()
-
-        return result
     }
 
-    suspend fun listarClientes(): List<Cliente> {
-        val result: MutableList<Cliente> = mutableListOf()
-
+    suspend fun listarClientes(callback: (List<Cliente>) -> Unit) {
         repository
             .collection("Cliente")
             .get()
-            .addOnSuccessListener { row ->
-                for (obj in row) {
-                    val cliente = ClienteMapper.fromMap(obj.data)
-                    result.add(cliente)
-                }
+            .addOnSuccessListener {
+                val result = it.map{ entity -> ClienteMapper.fromMap(entity.data) }
+                callback(result)
+            }
+            .addOnFailureListener {
+                callback(listOf())
             }
             .await()
-
-        Log.d("debug", "Result:")
-        result.forEach { Log.d("debug", "$it") }
-
-        return result
     }
 
-    suspend fun deletar(id: String): Boolean {
-        var result = false
-
+    suspend fun deletar(id: String, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(id)
             .delete()
             .addOnSuccessListener {
-                Log.d("debug", "Produto deletado com sucesso")
-                result = true
+                val result = Pair(true, "Produto deletado com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha: $it")
+                val result = Pair(false, "Falha ao deletar produto")
+                callback(result)
             }
             .await()
-
-        return result
     }
 
-    suspend fun alterar(produto: Produto): Boolean {
-        var result = false
-
+    suspend fun alterar(produto: Produto, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(produto.id)
             .update(mapper.toMap(produto))
             .addOnSuccessListener {
-                Log.d("debug", "Produto alterado com sucesso")
-                result = true
+                val result = Pair(true, "Produto alterado com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha: $it")
+                val result = Pair(false, "Falha ao alterar produto")
+                callback(result)
             }
             .await()
-
-        return result
     }
 }

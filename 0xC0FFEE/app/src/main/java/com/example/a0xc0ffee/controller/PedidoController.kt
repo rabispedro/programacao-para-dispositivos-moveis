@@ -7,24 +7,20 @@ import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
 class PedidoController(override val mapper: Mapper<Pedido>) : BaseController<Pedido>("Pedido") {
-    suspend fun cadastrar(pedido: Pedido): Boolean {
-        var result = false
-
+    suspend fun cadastrar(pedido: Pedido, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(pedido.id)
             .set(mapper.toMap(pedido))
             .addOnSuccessListener {
-                Log.d("debug", "Pedido inserido com sucesso")
-                result = true
+                val result = Pair(true, "Pedido inserido com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha: $it")
-                result = false
+                val result = Pair(false, "Falha ao inserir pedido")
+                callback(result)
             }
             .await()
-
-        return result
     }
 
     suspend fun listar(callback: (List<Pedido>) -> Unit) {
@@ -33,8 +29,8 @@ class PedidoController(override val mapper: Mapper<Pedido>) : BaseController<Ped
             .orderBy("cliente.cpf", Query.Direction.ASCENDING)
             .get()
             .addOnSuccessListener {
-                val entities = it.map{ entity -> mapper.fromMap(entity.data) }
-                callback(entities)
+                val result = it.map{ entity -> mapper.fromMap(entity.data) }
+                callback(result)
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha: $it")
@@ -42,20 +38,18 @@ class PedidoController(override val mapper: Mapper<Pedido>) : BaseController<Ped
             .await()
     }
 
-    suspend fun listar(texto: String): List<Pedido> {
-        val result: MutableList<Pedido> = mutableListOf()
-
+    suspend fun listar(texto: String, callback: (List<Pedido>) -> Unit) {
         repository
             .collection(collection)
             .whereEqualTo("cliente.cpf", texto)
             .get()
-            .addOnSuccessListener { row ->
-                for (obj in row) {
-                    result.add(mapper.fromMap(obj.data))
-                }
+            .addOnSuccessListener {
+                val result = it.map { entity -> mapper.fromMap(entity.data) }
+                callback(result)
+            }
+            .addOnFailureListener {
+                callback(listOf())
             }
             .await()
-
-        return result
     }
 }

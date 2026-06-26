@@ -6,24 +6,20 @@ import com.example.a0xc0ffee.model.mapper.Mapper
 import kotlinx.coroutines.tasks.await
 
 class ClienteController(override val mapper: Mapper<Cliente>) : BaseController<Cliente>("Cliente") {
-    suspend fun cadastrar(cliente: Cliente): Boolean {
-        var result = false
-
+    suspend fun cadastrar(cliente: Cliente, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(cliente.cpf.value)
             .set(mapper.toMap(cliente))
             .addOnSuccessListener {
-                Log.d("debug", "Cliente inserido com sucesso")
-                result = true
+                val result = Pair(true, "Cliente inserido com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha: $it")
-                result = false
+                val result = Pair(false, "Falha ao inserir cliente")
+                callback(result)
             }
             .await()
-
-        return result
     }
 
     suspend fun listar(callback: (List<Cliente>) -> Unit) {
@@ -36,63 +32,55 @@ class ClienteController(override val mapper: Mapper<Cliente>) : BaseController<C
             }
             .addOnFailureListener {
                 Log.d("debug", "Falha: $it")
+                callback(listOf())
             }
             .await()
     }
 
-    suspend fun listar(texto: String): List<Cliente> {
-        val result: MutableList<Cliente> = mutableListOf()
-
+    suspend fun listar(texto: String, callback: (List<Cliente>) -> Unit) {
         repository
             .collection(collection)
             .whereEqualTo("cpf", texto)
             .get()
-            .addOnSuccessListener { row ->
-                for (obj in row) {
-                    val entity = mapper.fromMap(obj.data)
-                    result.add(entity)
-                }
+            .addOnSuccessListener {
+                val entities = it.map { entity -> mapper.fromMap(entity.data) }
+                callback(entities)
+            }
+            .addOnFailureListener {
+                callback(listOf())
             }
             .await()
-
-        return result
     }
 
-    suspend fun deletar(cpf: String): Boolean {
-        var result = false
-
+    suspend fun deletar(cpf: String, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(cpf)
             .delete()
             .addOnSuccessListener {
-                Log.d("debug", "Cliente inserido com sucesso")
-                result = true
+                val result = Pair(true, "Cliente inserido com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha: $it")
+                val result = Pair(false, "Falha ao inserir cliente")
+                callback(result)
             }
             .await()
-
-        return result
     }
 
-    suspend fun alterar(cliente: Cliente): Boolean {
-        var result = false
-
+    suspend fun alterar(cliente: Cliente, callback: (Pair<Boolean, String>) -> Unit) {
         repository
             .collection(collection)
             .document(cliente.cpf.value)
             .update(mapper.toMap(cliente))
             .addOnSuccessListener {
-                Log.d("debug", "Cliente alterado com sucesso")
-                result = true
+                val result = Pair(true, "Cliente alterado com sucesso")
+                callback(result)
             }
             .addOnFailureListener {
-                Log.d("debug", "Falha: $it")
+                val result = Pair(false, "Falha ao alterar o cliente")
+                callback(result)
             }
             .await()
-
-        return result
     }
 }

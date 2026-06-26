@@ -22,6 +22,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarDuration
@@ -129,31 +130,31 @@ class ProdutoView(val controller: ProdutoController): View {
                                 }
 
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                                    Button(modifier = Modifier.padding(horizontal = 4.dp),
+                                    IconButton(modifier = Modifier.padding(horizontal = 4.dp),
                                         onClick = {
                                             estadoAdicionarProduto = true
                                             produto = it
                                         }) {
 
-                                        Icon(AddShoppingCartIcon, "Adicionar ao carrinho")
+                                        Icon(AddShoppingCartIcon, "Adicionar ao carrinho", tint = Color.White)
                                     }
 
-                                    Button(modifier = Modifier.padding(horizontal = 4.dp),
+                                    IconButton(modifier = Modifier.padding(horizontal = 4.dp),
                                         onClick = {
                                             estadoEditarProduto = true
                                             produto = it
                                         }) {
 
-                                        Icon(EditIcon, "Editar")
+                                        Icon(EditIcon, "Editar", tint = Color.White)
                                     }
 
-                                    Button(modifier = Modifier.padding(horizontal = 4.dp),
+                                    IconButton(modifier = Modifier.padding(horizontal = 4.dp),
                                         onClick = {
                                             estadoRemoverProduto = true
                                             produto = it
                                         }) {
 
-                                        Icon(DeleteIcon, "Remover")
+                                        Icon(DeleteIcon, "Remover", tint = Color.White)
                                     }
                                 }
                             }
@@ -177,9 +178,10 @@ class ProdutoView(val controller: ProdutoController): View {
                 }
                 estadoBuscarProduto -> {
                     LaunchedEffect(scope) {
-                        produtos.clear()
-                        val entities =controller.listar(textoBuscaProduto)
-                        produtos.addAll(entities)
+                        controller.listar(textoBuscaProduto) {
+                            produtos.clear()
+                            produtos.addAll(it)
+                        }
                         Log.d("debug", "Produtos: ${produtos.size}")
                         estadoBuscarProduto = false
                         textoBuscaProduto = ""
@@ -289,13 +291,22 @@ class ProdutoView(val controller: ProdutoController): View {
 
                     scope.launch {
                         val idProduto = UUID.randomUUID().toString()
-                        val produto = Produto(idProduto, TipoDoGrao.valueOf(tipoDoGraoProduto),
-                            PontoDaTorra.valueOf(pontoDaTorraProduto), valorProduto.toDouble(), blendProduto)
+                        val produto = Produto(
+                            idProduto,
+                            TipoDoGrao.valueOf(tipoDoGraoProduto),
+                            PontoDaTorra.valueOf(pontoDaTorraProduto),
+                            valorProduto.toDouble(),
+                            blendProduto
+                        )
 
-                        controller.cadastrar(produto)
+                        var result = Pair(false, "")
+
+                        controller.cadastrar(produto) {
+                            result = it
+                        }
 
                         snackbar.showSnackbar(
-                            message = "Produto Criado",
+                            message = result.second,
                             actionLabel = "X",
                             duration = SnackbarDuration.Short
                         )
@@ -400,22 +411,24 @@ class ProdutoView(val controller: ProdutoController): View {
                     state = false
 
                     scope.launch {
-                        val produtoEditado = Produto(produto.id, TipoDoGrao.valueOf(tipoDoGraoProduto),
-                            PontoDaTorra.valueOf(pontoDaTorraProduto), valorProduto.toDouble(), blendProduto)
+                        val produtoEditado = Produto(
+                            produto.id,
+                            TipoDoGrao.valueOf(tipoDoGraoProduto),
+                            PontoDaTorra.valueOf(pontoDaTorraProduto),
+                            valorProduto.toDouble(),
+                            blendProduto
+                        )
 
-                        if (controller.alterar(produtoEditado)) {
-                            snackbar.showSnackbar(
-                                message = "Produto Editado",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao editar o Produto",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        var result = Pair(false, "")
+                        controller.alterar(produtoEditado) {
+                            result = it
                         }
+
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }) {
                     Text("Confirmar")
@@ -439,19 +452,15 @@ class ProdutoView(val controller: ProdutoController): View {
                     state = false
 
                     scope.launch {
-                        if (controller.deletar(produto.id)) {
-                            snackbar.showSnackbar(
-                                message = "Produto removido!",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
-                        } else {
-                            snackbar.showSnackbar(
-                                message = "Erro ao remover Produto",
-                                actionLabel = "X",
-                                duration = SnackbarDuration.Short
-                            )
+                        var result = Pair(false, "")
+                        controller.deletar(produto.id) {
+                            result = it
                         }
+                        snackbar.showSnackbar(
+                            message = result.second,
+                            actionLabel = "X",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }) {
                     Text("Confirmar")
@@ -477,8 +486,10 @@ class ProdutoView(val controller: ProdutoController): View {
         var quantidadeProduto by remember { mutableStateOf("1") }
 
         LaunchedEffect(scope) {
-            clientes.clear()
-            clientes.addAll(controller.listarClientes())
+            controller.listarClientes() {
+                clientes.clear()
+                clientes.addAll(it)
+            }
             Log.d("debug", "Clientes encontrados: ${clientes.size}")
         }
 

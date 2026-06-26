@@ -61,13 +61,15 @@ class RelatorioView(val controller: RelatorioController): View {
         var dataFim = remember { mutableStateOf("") }
 
         LaunchedEffect(scope) {
-            clienteMaiorValor.clear()
-            val clientesMaiorValor = controller.buscarClienteMaiorValor()
-            clienteMaiorValor.addAll(clientesMaiorValor)
+            controller.buscarClienteMaiorValor {
+                clienteMaiorValor.clear()
+                clienteMaiorValor.addAll(it)
+            }
 
-            clienteMaiorQuantidade.clear()
-            val clientesMaiorQuantidade = controller.buscarClienteMaiorQuantidade()
-            clienteMaiorQuantidade.addAll(clientesMaiorQuantidade)
+            controller.buscarClienteMaiorQuantidade {
+                clienteMaiorQuantidade.clear()
+                clienteMaiorQuantidade.addAll(it)
+            }
 
             vendasEntreDatas.clear()
 //            val vendas = controller.buscarVendasEntreDatas(dataInicio, dataFim)
@@ -75,12 +77,11 @@ class RelatorioView(val controller: RelatorioController): View {
 
             Log.d("debug", "Vendas: ${vendasEntreDatas.size}")
 
-            clientesPorTipoDoGrao.clear()
-            val clientesParaCadaTipoDeGrao = controller.listarClientesPorTipoDoGrao()
-
-            clientesParaCadaTipoDeGrao.keys.forEach {
-                clientesPorTipoDoGrao[it] = clientesParaCadaTipoDeGrao[it]!!.toMutableList()
-                Log.d("debug", "Clientes do grão $it: ${clientesPorTipoDoGrao[it]!!.size}")
+            controller.listarClientesPorTipoDoGrao() {
+                clientesPorTipoDoGrao.clear()
+                it.keys.forEach { entity ->
+                    clientesPorTipoDoGrao[entity] = it[entity]!!.toMutableList()
+                }
             }
         }
 
