@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -57,6 +58,8 @@ import com.example.prova2.ui.theme.icon.DeleteIcon
 import com.example.prova2.ui.theme.icon.EditIcon
 import com.example.prova2.ui.theme.icon.MoreVertIcon
 import com.example.prova2.ui.theme.icon.PlusIcon
+import com.example.prova2.ui.theme.icon.RoomServiceIcon
+import com.example.prova2.ui.theme.icon.StoreFrontIcon
 import com.example.test.ChevronLeftIcon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -73,9 +76,7 @@ class LojaView(val lojaController: LojaController, val queijoController: QueijoC
 
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(0.dp)
+            modifier = Modifier.fillMaxWidth().padding(0.dp)
         ) {
             IconButton(onClick = { navigator.navigate("MainView") }) {
                 Icon(ChevronLeftIcon, "Voltar")
@@ -106,7 +107,6 @@ class LojaView(val lojaController: LojaController, val queijoController: QueijoC
                             text = { Text("Remover", fontSize = 18.sp) },
                             leadingIcon = { Icon(DeleteIcon, "Remover") }
                         )
-
                     }
                 )
             }
@@ -181,6 +181,10 @@ class LojaView(val lojaController: LojaController, val queijoController: QueijoC
                             modifier = Modifier.fillMaxWidth().background(Color.Gray).padding(8.dp).heightIn(40.dp)) {
 
                             Log.d("debug", "Item: $it")
+
+                            Column(modifier = Modifier.fillMaxHeight()) {
+                                Icon(RoomServiceIcon, "Queijo")
+                            }
 
                             Column {
                                 Text(it.nome.value, fontSize = 24.sp, fontWeight = FontWeight.Bold)

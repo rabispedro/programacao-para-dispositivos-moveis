@@ -26,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.prova2.controller.LojaController
 import com.example.prova2.controller.QueijoController
+import com.example.prova2.model.type.AromaQueijo
 import com.example.prova2.ui.theme.Prova2Theme
 import com.example.prova2.view.LojaView
 import com.example.prova2.view.MainView

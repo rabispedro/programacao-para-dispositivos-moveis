@@ -7,11 +7,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -45,6 +45,7 @@ import com.example.prova2.controller.QueijoController
 import com.example.prova2.model.Loja
 import com.example.prova2.model.Queijo
 import com.example.prova2.ui.theme.icon.PlusIcon
+import com.example.prova2.ui.theme.icon.StoreFrontIcon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -124,6 +125,10 @@ class MainView(val lojaController: LojaController, val queijoController: QueijoC
 
                             Log.d("debug", "Item: $it")
 
+                            Column(modifier = Modifier.padding(horizontal = 4.dp)) {
+                                Icon(StoreFrontIcon, "Loja", tint = Color.DarkGray)
+                            }
+
                             Card(modifier = Modifier.fillMaxWidth(),
                                 onClick = {
                                     estadoEscolheLoja = true
@@ -156,23 +161,25 @@ class MainView(val lojaController: LojaController, val queijoController: QueijoC
 
             Spacer(modifier = Modifier.padding(bottom = 12.dp))
 
-            Text("Quantidade de Lojas: $quantidadeLojas", fontSize = 20.sp)
+            Column(modifier = Modifier.padding(horizontal = 4.dp)) {
+                Text("Quantidade de Lojas: $quantidadeLojas", fontSize = 20.sp)
 
-            Spacer(modifier = Modifier.padding(bottom = 16.dp))
+                Spacer(modifier = Modifier.padding(bottom = 12.dp))
 
-            Text("Quantidade de Queijos: $quantidadeQueijos", fontSize = 20.sp)
+                Text("Quantidade de Queijos: $quantidadeQueijos", fontSize = 20.sp)
 
-            Spacer(modifier = Modifier.padding(bottom = 16.dp))
+                Spacer(modifier = Modifier.padding(bottom = 12.dp))
 
-            Text("Queijo com maior aroma: ${queijoMaiorAroma?.nome?.value} (${queijoMaiorAroma?.aroma?.capitalize()})", fontSize = 20.sp)
+                Text("Queijo com maior aroma: ${queijoMaiorAroma?.nome?.value} (${queijoMaiorAroma?.aroma?.capitalize()})", fontSize = 20.sp)
 
-            Spacer(modifier = Modifier.padding(bottom = 16.dp))
+                Spacer(modifier = Modifier.padding(bottom = 12.dp))
 
-            Text("Queijo mais caro: ${queijoMaisCaro?.nome?.value} (R$${queijoMaisCaro?.preco?.value})", fontSize = 20.sp)
+                Text("Queijo mais caro: ${queijoMaisCaro?.nome?.value} (R$${queijoMaisCaro?.preco?.value})", fontSize = 20.sp)
 
-            Spacer(modifier = Modifier.padding(bottom = 16.dp))
+                Spacer(modifier = Modifier.padding(bottom = 12.dp))
 
-            Text("Loja com queijos mais feios: ${lojaComQueijosMaisFeios?.nome?.value}", fontSize = 20.sp)
+                Text("Loja com queijos mais feios: ${lojaComQueijosMaisFeios?.nome?.value}", fontSize = 20.sp)
+            }
         }
 
         when {
